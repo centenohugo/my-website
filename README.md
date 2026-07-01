@@ -29,6 +29,16 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
+## Database
+
+This project uses Postgres (Vercel Postgres in production, Docker locally).
+
+1. Copy `.env.local.example` to `.env.local`.
+2. Start the local database: `docker compose up -d`
+3. Run pending migrations: `npm run db:migrate`
+
+New schema changes go in a new numbered file under `migrations/` (e.g. `0002_add_something.sql`) and are applied with `npm run db:migrate` — never edit an already-applied migration file.
+
 ## Deploy on Vercel
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
