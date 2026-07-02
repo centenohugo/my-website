@@ -69,3 +69,23 @@ export async function PUT(
     throw error
   }
 }
+
+export async function DELETE(
+  _request: Request,
+  ctx: RouteContext<'/api/posts/[slug]'>
+) {
+  if (!(await hasValidSession())) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
+  const { slug } = await ctx.params
+  const [deleted] = await sql`
+    delete from posts where slug = ${slug} returning id
+  `
+
+  if (!deleted) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
+  return new NextResponse(null, { status: 204 })
+}
