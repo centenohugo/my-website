@@ -37,7 +37,7 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const { title, content, status, slug: requestedSlug } = body
+  const { title, content, status, slug: requestedSlug, subtitle, image_url } = body
 
   const newSlug = requestedSlug ? slugify(requestedSlug) : existing.slug
   const newStatus = status ?? existing.status
@@ -50,13 +50,15 @@ export async function PUT(
     const [updated] = await sql`
       update posts set
         title = ${title ?? existing.title},
+        subtitle = ${subtitle !== undefined ? subtitle : existing.subtitle},
         slug = ${newSlug},
         content = ${content ?? existing.content},
         status = ${newStatus},
         published_at = ${publishedAt},
+        image_url = ${image_url !== undefined ? image_url : existing.image_url},
         updated_at = now()
       where id = ${existing.id}
-      returning id, title, slug, status, created_at, updated_at, published_at
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
     `
     return NextResponse.json(updated)
   } catch (error) {

@@ -5,7 +5,7 @@ import { blogLayout, blogScrollBehavior, blogTypography } from "./theme";
 
 export default async function BlogPage() {
   const initialPosts = await sql<Post[]>`
-    select slug, title, subtitle, published_at
+    select slug, title, subtitle, published_at, image_url
     from posts
     where status = 'published'
     order by published_at desc

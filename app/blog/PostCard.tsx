@@ -6,6 +6,7 @@ export type Post = {
   title: string;
   subtitle: string | null;
   published_at: string | null;
+  image_url: string | null;
 };
 
 function formatDate(published_at: string | null) {
@@ -28,7 +29,11 @@ export default function PostCard({ post }: { post: Post }) {
         style={{
           borderRadius: blogLayout.thumbnailRadius,
           backgroundColor: blogLayout.thumbnailColor,
-          backgroundImage: blogLayout.thumbnailPattern,
+          backgroundImage: post.image_url
+            ? `url(${post.image_url})`
+            : blogLayout.thumbnailPattern,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
         }}
       >
       </div>
