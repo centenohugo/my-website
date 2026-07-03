@@ -40,9 +40,17 @@ export const siteTypography = {
     letterSpacing: "-0.01em",
     color: siteColors.textCardTitle,
   },
+  backLink: {
+    fontFamily: siteFonts.sans,
+    fontSize: "11px",
+    letterSpacing: "0.14em",
+    color: siteColors.textMuted,
+    cursor: "pointer",
+  },
 } as const;
 
 export const siteLayout = {
   sidePadding: "44px",
   headerTopSpace: "44px",
+  navbarHeight: "56px",
 } as const;

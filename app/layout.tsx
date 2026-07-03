@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Piazzolla, Inter } from "next/font/google";
+import InternalNavTracker from "./InternalNavTracker";
+import Navbar from "./Navbar";
 import "./globals.css";
 
 const piazzolla = Piazzolla({
@@ -29,7 +31,10 @@ export default function RootLayout({
       lang="en"
       className={`${piazzolla.variable} ${inter.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <InternalNavTracker />
+        <Navbar>{children}</Navbar>
+      </body>
     </html>
   );
 }
