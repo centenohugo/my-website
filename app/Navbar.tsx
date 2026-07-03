@@ -18,8 +18,7 @@ export default function Navbar({ children }: { children: React.ReactNode }) {
             height: siteLayout.navbarHeight,
             paddingLeft: siteLayout.sidePadding,
             paddingRight: siteLayout.sidePadding,
-            backgroundColor: siteColors.paperElevated,
-            borderBottom: `1px solid ${siteColors.tagPlaceholder}`,
+            backgroundColor: siteColors.paper,
           }}
         >
           <BackLink />

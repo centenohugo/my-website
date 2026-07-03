@@ -44,7 +44,7 @@ export const siteTypography = {
     fontFamily: siteFonts.sans,
     fontSize: "11px",
     letterSpacing: "0.14em",
-    color: siteColors.textMuted,
+    color: siteColors.textCardTitle,
     cursor: "pointer",
   },
 } as const;
