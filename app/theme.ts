@@ -2,7 +2,7 @@
 // and adds what is specific for that section (typography/specific layours).
 
 export const siteColors = {
-  paper: "#ece5d7",
+  paper: "#f4efe6",
   paperElevated: "#f4efe5",
   textPrimary: "#262019",
   textCardTitle: "#282219",
