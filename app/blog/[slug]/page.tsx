@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import { sql } from "@/lib/db";
+import MarkdownContent from "../../MarkdownContent";
 import { blogColors, blogLayout, blogTypography } from "../theme";
-import PostBody from "./PostBody";
 
 type PostDetail = {
   title: string;
@@ -74,7 +74,7 @@ export default async function PostPage({
       >
         <hr className="my-8" style={{ borderColor: blogColors.dateMono }} />
 
-        <PostBody content={post.content} />
+        <MarkdownContent content={post.content} />
       </div>
     </main>
   );
