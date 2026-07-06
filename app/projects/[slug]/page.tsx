@@ -1,0 +1,116 @@
+import { notFound } from "next/navigation";
+import { sql } from "@/lib/db";
+import MarkdownContent from "../../MarkdownContent";
+import { STAGE_LABELS, projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
+
+type ProjectDetail = {
+  title: string;
+  subtitle: string | null;
+  content: string;
+  published_at: string | null;
+  image_url: string | null;
+  stage: ProjectStage;
+  repo_url: string | null;
+  live_url: string | null;
+};
+
+function formatDate(published_at: string | null) {
+  if (!published_at) return "";
+  const date = new Date(published_at);
+  return date
+    .toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
+    .toUpperCase();
+}
+
+export default async function ProjectPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+
+  const [project] = await sql<ProjectDetail[]>`
+    select title, subtitle, content, published_at, image_url, stage, repo_url, live_url
+    from projects
+    where slug = ${slug} and status = 'published'
+  `;
+
+  if (!project) {
+    notFound();
+  }
+
+  return (
+    <main className="pb-16" style={{ paddingTop: projectLayout.headerTopSpace }}>
+      <div className="flex flex-col md:flex-row-reverse">
+        <div className="w-full px-[44px] md:w-1/2 md:px-0">
+          <div
+            className="relative aspect-[3/2] w-full overflow-hidden md:aspect-auto md:h-[85vh]"
+            style={{
+              borderRadius: projectLayout.thumbnailRadius,
+              backgroundColor: projectLayout.thumbnailColor,
+              backgroundImage: project.image_url
+                ? `url(${project.image_url})`
+                : projectLayout.thumbnailPattern,
+              backgroundSize: "cover",
+              backgroundPosition: "center",
+            }}
+          />
+        </div>
+
+        <div
+          className="flex w-full flex-col justify-center gap-3 py-8 md:w-1/2 md:py-0"
+          style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
+        >
+          <div className="flex items-center gap-2">
+            <span className="uppercase" style={projectTypography.postDate}>
+              {formatDate(project.published_at)}
+            </span>
+            <span className="uppercase" style={projectTypography.stageBadge}>
+              {STAGE_LABELS[project.stage]}
+            </span>
+          </div>
+          <h1 style={{ ...projectTypography.postTitle, textWrap: "pretty" }}>{project.title}</h1>
+          {project.subtitle && (
+            <p style={{ ...projectTypography.postSubtitle, textWrap: "pretty" }}>{project.subtitle}</p>
+          )}
+
+          {(project.repo_url || project.live_url) && (
+            <div className="mt-2 flex items-center gap-4">
+              {project.repo_url && (
+                <a
+                  href={project.repo_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="uppercase"
+                  style={{ ...projectTypography.postDate, textDecoration: "underline" }}
+                >
+                  Código
+                </a>
+              )}
+              {project.live_url && (
+                <a
+                  href={project.live_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="uppercase"
+                  style={{ ...projectTypography.postDate, textDecoration: "underline" }}
+                >
+                  Ver proyecto
+                </a>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div
+        className="mx-auto max-w-3xl"
+        style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
+      >
+        <hr className="my-8" style={{ borderColor: projectColors.dateMono }} />
+
+        <MarkdownContent content={project.content} />
+      </div>
+    </main>
+  );
+}

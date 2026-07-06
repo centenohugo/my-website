@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { siteLayout, siteTypography } from "./theme";
 
-const SECTIONS = [{ label: "Blog", href: "/blog" }];
+const SECTIONS = [
+  { label: "Blog", href: "/blog" },
+  { label: "Proyectos", href: "/projects" },
+];
 
 export default function Home() {
   return (
