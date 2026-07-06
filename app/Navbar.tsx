@@ -6,8 +6,8 @@ import { siteColors, siteLayout } from "./theme";
 
 export default function Navbar({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  // No navbar on the home page
-  const showNavbar = pathname !== "/";
+  // No navbar on the home page or the admin panel (both act as their own landing screen)
+  const showNavbar = pathname !== "/" && pathname !== "/admin";
 
   return (
     <>

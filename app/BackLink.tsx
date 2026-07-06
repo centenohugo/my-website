@@ -3,15 +3,8 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { INTERNAL_HISTORY_KEY } from "./InternalNavTracker";
+import { backEligibleKey, parentPath } from "./navHistory";
 import { siteTypography } from "./theme";
-
-function parentPath(pathname: string): string | null {
-  if (pathname === "/") return null;
-  const trimmed = pathname.replace(/\/+$/, "");
-  const parent = trimmed.slice(0, trimmed.lastIndexOf("/"));
-  return parent === "" ? "/" : parent;
-}
 
 export default function BackLink() {
   const pathname = usePathname();
@@ -19,7 +12,7 @@ export default function BackLink() {
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {
-    setCanGoBack(sessionStorage.getItem(INTERNAL_HISTORY_KEY) === "1");
+    setCanGoBack(sessionStorage.getItem(backEligibleKey(pathname)) === "1");
   }, [pathname]);
 
   const fallbackHref = parentPath(pathname);
@@ -27,7 +20,12 @@ export default function BackLink() {
 
   if (!canGoBack) {
     return (
-      <Link href={fallbackHref} className="uppercase" style={siteTypography.backLink}>
+      <Link
+        href={fallbackHref}
+        scroll={false}
+        className="uppercase"
+        style={siteTypography.backLink}
+      >
         ← Volver
       </Link>
     );
