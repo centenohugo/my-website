@@ -8,20 +8,22 @@ export default function LocaleToggle() {
   const pathname = usePathname();
   const { locale, setLocale } = useLocale();
 
-  const hidden = pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login";
+  const hidden = pathname === "/admin" || pathname.startsWith("/admin/") || pathname === "/login" || pathname.startsWith("/login/");
   if (hidden) return null;
 
   return (
-    <div
+    <button
+      type="button"
+      onClick={() => setLocale(locale === "en" ? "es" : "en")}
+      aria-label={locale === "en" ? "Switch to Spanish" : "Cambiar a inglés"}
       className="fixed right-0 top-0 z-50 flex items-center gap-1.5"
       style={{
         height: siteLayout.navbarHeight,
         paddingRight: siteLayout.sidePadding,
+        cursor: "pointer",
       }}
     >
-      <button
-        type="button"
-        onClick={() => setLocale("en")}
+      <span
         className="uppercase"
         style={{
           ...siteTypography.backLink,
@@ -29,13 +31,11 @@ export default function LocaleToggle() {
         }}
       >
         EN
-      </button>
+      </span>
       <span aria-hidden style={{ ...siteTypography.backLink, color: siteColors.textMuted }}>
         /
       </span>
-      <button
-        type="button"
-        onClick={() => setLocale("es")}
+      <span
         className="uppercase"
         style={{
           ...siteTypography.backLink,
@@ -43,7 +43,7 @@ export default function LocaleToggle() {
         }}
       >
         ES
-      </button>
-    </div>
+      </span>
+    </button>
   );
 }

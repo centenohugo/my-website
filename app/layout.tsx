@@ -44,8 +44,8 @@ export default async function RootLayout({
       <body className="min-h-full flex flex-col">
         <LocaleProvider initialLocale={locale}>
           <InternalNavTracker />
-          <LocaleToggle />
           <Navbar>{children}</Navbar>
+          <LocaleToggle />
         </LocaleProvider>
       </body>
     </html>
