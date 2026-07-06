@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { formatCardDate } from "@/lib/i18n/formatDate";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
 import { blogLayout, blogTypography } from "./theme";
 
 export type Post = {
@@ -9,16 +13,9 @@ export type Post = {
   image_url: string | null;
 };
 
-function formatDate(published_at: string | null) {
-  if (!published_at) return "";
-  const date = new Date(published_at);
-  return date
-    .toLocaleDateString("es-ES", { month: "short", year: "numeric" })
-    .toUpperCase()
-    .replace(".", "");
-}
-
 export default function PostCard({ post }: { post: Post }) {
+  const { locale } = useLocale();
+
   return (
     <Link
       href={`/blog/${post.slug}`}
@@ -40,7 +37,7 @@ export default function PostCard({ post }: { post: Post }) {
 
       <div className="flex flex-col gap-1.5">
         <span className="uppercase" style={blogTypography.cardDate}>
-          {formatDate(post.published_at)}
+          {formatCardDate(post.published_at, locale)}
         </span>
 
         <h3 style={{ ...blogTypography.cardTitle, textWrap: "pretty" }}>

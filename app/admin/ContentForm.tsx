@@ -73,7 +73,7 @@ export default function ContentForm({
     setHeroUploading(false);
 
     if (!url) {
-      setError("No se pudo subir la imagen");
+      setError("Couldn't upload the image");
       return;
     }
     setImageUrl(url);
@@ -108,11 +108,11 @@ export default function ContentForm({
     setInlineUploading(false);
 
     if (!url) {
-      setError("No se pudo subir la imagen");
+      setError("Couldn't upload the image");
       return;
     }
 
-    const caption = window.prompt("Pie de foto (déjalo vacío para no poner ninguno):", "");
+    const caption = window.prompt("Caption (leave empty for none):", "");
     setTab("write");
     insertAtCursor(`![${caption ?? ""}](${url})`);
   }
@@ -145,7 +145,7 @@ export default function ContentForm({
     if (!res.ok) {
       setSubmitting(false);
       const data = await res.json().catch(() => null);
-      setError(data?.error ?? "Ha ocurrido un error");
+      setError(data?.error ?? "An error occurred");
       return;
     }
 
@@ -217,9 +217,9 @@ export default function ContentForm({
               onChange={(event) => setStage(event.target.value as ContentStage)}
               style={adminTypography.input}
             >
-              <option value="in_progress">En progreso</option>
-              <option value="completed">Completado</option>
-              <option value="archived">Archivado</option>
+              <option value="in_progress">In progress</option>
+              <option value="completed">Completed</option>
+              <option value="archived">Archived</option>
             </select>
           </div>
         </>
@@ -241,7 +241,7 @@ export default function ContentForm({
             <button
               type="button"
               onClick={() => setImageUrl("")}
-              aria-label="Eliminar imagen"
+              aria-label="Remove image"
               className="absolute flex items-center justify-center"
               style={{
                 top: "6px",
@@ -267,7 +267,7 @@ export default function ContentForm({
             style={{ ...adminTypography.tab, cursor: "pointer" }}
           >
             <UploadIcon />
-            Elegir archivo
+            Choose file
           </button>
           <input
             ref={heroFileInputRef}
@@ -276,7 +276,7 @@ export default function ContentForm({
             className="hidden"
             onChange={handleHeroImageChange}
           />
-          {heroUploading && <span style={adminTypography.label}>Subiendo…</span>}
+          {heroUploading && <span style={adminTypography.label}>Uploading…</span>}
         </div>
       </div>
 
@@ -294,7 +294,7 @@ export default function ContentForm({
               style={{ ...adminTypography.tab, cursor: "pointer" }}
             >
               <ImageIcon />
-              {inlineUploading ? "Subiendo…" : "Insertar imagen"}
+              {inlineUploading ? "Uploading…" : "Insert image"}
             </button>
             <input
               ref={inlineFileInputRef}
@@ -356,8 +356,8 @@ export default function ContentForm({
           onChange={(event) => setStatus(event.target.value as "draft" | "published")}
           style={adminTypography.input}
         >
-          <option value="draft">Borrador</option>
-          <option value="published">Publicado</option>
+          <option value="draft">Draft</option>
+          <option value="published">Published</option>
         </select>
       </div>
 
@@ -369,7 +369,7 @@ export default function ContentForm({
         className="w-fit uppercase"
         style={adminTypography.buttonPrimary}
       >
-        {submitting ? "Guardando…" : heroUploading || inlineUploading ? "Esperando subida…" : "Guardar"}
+        {submitting ? "Saving…" : heroUploading || inlineUploading ? "Waiting for upload…" : "Save"}
       </button>
     </form>
   );

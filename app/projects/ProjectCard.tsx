@@ -1,5 +1,10 @@
+"use client";
+
 import Link from "next/link";
-import { STAGE_LABELS, type ProjectStage, projectLayout, projectTypography } from "./theme";
+import { getDictionary } from "@/lib/i18n/dictionary";
+import { formatCardDate } from "@/lib/i18n/formatDate";
+import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { type ProjectStage, projectLayout, projectTypography } from "./theme";
 
 export type Project = {
   slug: string;
@@ -10,16 +15,10 @@ export type Project = {
   stage: ProjectStage;
 };
 
-function formatDate(published_at: string | null) {
-  if (!published_at) return "";
-  const date = new Date(published_at);
-  return date
-    .toLocaleDateString("es-ES", { month: "short", year: "numeric" })
-    .toUpperCase()
-    .replace(".", "");
-}
-
 export default function ProjectCard({ project }: { project: Project }) {
+  const { locale } = useLocale();
+  const t = getDictionary(locale);
+
   return (
     <Link
       href={`/projects/${project.slug}`}
@@ -42,10 +41,10 @@ export default function ProjectCard({ project }: { project: Project }) {
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <span className="uppercase" style={projectTypography.cardDate}>
-            {formatDate(project.published_at)}
+            {formatCardDate(project.published_at, locale)}
           </span>
           <span className="uppercase" style={projectTypography.stageBadge}>
-            {STAGE_LABELS[project.stage]}
+            {t.projects.stages[project.stage]}
           </span>
         </div>
 

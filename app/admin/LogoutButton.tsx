@@ -19,7 +19,7 @@ export default function LogoutButton() {
       className="uppercase"
       style={adminTypography.buttonSecondary}
     >
-      Cerrar sesión
+      Log out
     </button>
   );
 }

@@ -17,7 +17,7 @@ export default function DeleteContentButton({
   const [pending, setPending] = useState(false);
 
   async function handleDelete() {
-    if (!confirm("¿Borrar esta entrada? Esta acción no se puede deshacer.")) {
+    if (!confirm("Delete this entry? This action cannot be undone.")) {
       return;
     }
 
@@ -38,7 +38,7 @@ export default function DeleteContentButton({
       className="uppercase"
       style={{ ...adminTypography.buttonSecondary, cursor: "pointer" }}
     >
-      {pending ? "Borrando…" : "Borrar"}
+      {pending ? "Deleting…" : "Delete"}
     </button>
   );
 }

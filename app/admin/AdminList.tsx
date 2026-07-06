@@ -30,7 +30,7 @@ export default function AdminList({
           <div className="flex flex-col gap-1">
             <span style={adminTypography.listTitle}>{item.title}</span>
             <span className="uppercase" style={adminTypography.badge}>
-              {item.status === "published" ? "Publicado" : "Borrador"}
+              {item.status === "published" ? "Published" : "Draft"}
             </span>
           </div>
 

@@ -1,7 +1,10 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
+import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import { formatFullDate } from "@/lib/i18n/formatDate";
 import MarkdownContent from "../../MarkdownContent";
-import { STAGE_LABELS, projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
+import { projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
 
 type ProjectDetail = {
   title: string;
@@ -14,20 +17,14 @@ type ProjectDetail = {
   live_url: string | null;
 };
 
-function formatDate(published_at: string | null) {
-  if (!published_at) return "";
-  const date = new Date(published_at);
-  return date
-    .toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
-    .toUpperCase();
-}
-
 export default async function ProjectPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
 
   const [project] = await sql<ProjectDetail[]>`
     select title, subtitle, content, published_at, image_url, stage, repo_url, live_url
@@ -63,10 +60,10 @@ export default async function ProjectPage({
         >
           <div className="flex items-center gap-2">
             <span className="uppercase" style={projectTypography.postDate}>
-              {formatDate(project.published_at)}
+              {formatFullDate(project.published_at, locale)}
             </span>
             <span className="uppercase" style={projectTypography.stageBadge}>
-              {STAGE_LABELS[project.stage]}
+              {t.projects.stages[project.stage]}
             </span>
           </div>
           <h1 style={{ ...projectTypography.postTitle, textWrap: "pretty" }}>{project.title}</h1>
@@ -84,7 +81,7 @@ export default async function ProjectPage({
                   className="uppercase"
                   style={{ ...projectTypography.postDate, textDecoration: "underline" }}
                 >
-                  Código
+                  {t.projects.codeLink}
                 </a>
               )}
               {project.live_url && (
@@ -95,7 +92,7 @@ export default async function ProjectPage({
                   className="uppercase"
                   style={{ ...projectTypography.postDate, textDecoration: "underline" }}
                 >
-                  Ver proyecto
+                  {t.projects.liveLink}
                 </a>
               )}
             </div>

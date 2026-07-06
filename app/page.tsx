@@ -1,12 +1,17 @@
 import Link from "next/link";
+import { cookies } from "next/headers";
+import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { siteLayout, siteTypography } from "./theme";
 
-const SECTIONS = [
-  { label: "Blog", href: "/blog" },
-  { label: "Proyectos", href: "/projects" },
-];
+export default async function Home() {
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
 
-export default function Home() {
+  const SECTIONS = [
+    { label: t.nav.blog, href: "/blog" },
+    { label: t.nav.projects, href: "/projects" },
+  ];
+
   return (
     <main
       className="mx-auto max-w-6xl pb-16"
@@ -17,7 +22,7 @@ export default function Home() {
       }}
     >
       <header className="mb-10 flex flex-col gap-2">
-        <h1 style={siteTypography.pageTitle}>Secciones</h1>
+        <h1 style={siteTypography.pageTitle}>{t.home.sectionsHeading}</h1>
       </header>
 
       <ul className="flex flex-col gap-4">

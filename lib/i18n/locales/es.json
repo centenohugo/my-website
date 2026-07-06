@@ -1,0 +1,31 @@
+{
+  "meta": {
+    "title": "Hugo Centeno Sanz",
+    "description": "Página personal de Hugo Centeno Sanz"
+  },
+  "nav": {
+    "blog": "Blog",
+    "projects": "Proyectos"
+  },
+  "home": {
+    "sectionsHeading": "Secciones"
+  },
+  "common": {
+    "backLink": "← Volver"
+  },
+  "blog": {
+    "pageTitle": "Escritos",
+    "loadingMore": "Cargando más ·"
+  },
+  "projects": {
+    "pageTitle": "Proyectos",
+    "loadingMore": "Cargando más ·",
+    "codeLink": "Código",
+    "liveLink": "Ver proyecto",
+    "stages": {
+      "in_progress": "En progreso",
+      "completed": "Completado",
+      "archived": "Archivado"
+    }
+  }
+}

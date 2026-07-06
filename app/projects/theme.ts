@@ -27,10 +27,4 @@ export const projectTypography = {
   },
 } as const;
 
-export const STAGE_LABELS = {
-  in_progress: "En progreso",
-  completed: "Completado",
-  archived: "Archivado",
-} as const;
-
-export type ProjectStage = keyof typeof STAGE_LABELS;
+export type ProjectStage = "in_progress" | "completed" | "archived";

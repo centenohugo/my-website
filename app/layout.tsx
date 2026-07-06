@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { Piazzolla, Inter } from "next/font/google";
+import { cookies } from "next/headers";
+import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import InternalNavTracker from "./InternalNavTracker";
+import LocaleToggle from "./LocaleToggle";
 import Navbar from "./Navbar";
 import "./globals.css";
 
@@ -16,24 +20,33 @@ const inter = Inter({
   weight: ["400", "500"],
 });
 
-export const metadata: Metadata = {
-  title: "Hugo Centeno Sanz",
-  description: "Personal website of Hugo Centeno Sanz"
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
+  return {
+    title: t.meta.title,
+    description: t.meta.description,
+  };
+}
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+
   return (
     <html
-      lang="en"
+      lang={locale}
       className={`${piazzolla.variable} ${inter.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <InternalNavTracker />
-        <Navbar>{children}</Navbar>
+        <LocaleProvider initialLocale={locale}>
+          <InternalNavTracker />
+          <LocaleToggle />
+          <Navbar>{children}</Navbar>
+        </LocaleProvider>
       </body>
     </html>
   );

@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
+import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
+import { LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import { formatFullDate } from "@/lib/i18n/formatDate";
 import MarkdownContent from "../../MarkdownContent";
 import { blogColors, blogLayout, blogTypography } from "../theme";
 
@@ -11,20 +14,13 @@ type PostDetail = {
   image_url: string | null;
 };
 
-function formatDate(published_at: string | null) {
-  if (!published_at) return "";
-  const date = new Date(published_at);
-  return date
-    .toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" })
-    .toUpperCase();
-}
-
 export default async function PostPage({
   params,
 }: {
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
 
   const [post] = await sql<PostDetail[]>`
     select title, subtitle, content, published_at, image_url
@@ -59,7 +55,7 @@ export default async function PostPage({
           style={{ paddingLeft: blogLayout.sidePadding, paddingRight: blogLayout.sidePadding }}
         >
           <span className="uppercase" style={blogTypography.postDate}>
-            {formatDate(post.published_at)}
+            {formatFullDate(post.published_at, locale)}
           </span>
           <h1 style={{ ...blogTypography.postTitle, textWrap: "pretty" }}>{post.title}</h1>
           {post.subtitle && (
