@@ -1,6 +1,6 @@
-import Link from "next/link";
 import { cookies } from "next/headers";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import LandingHero from "./LandingHero";
 import { siteLayout, siteTypography } from "./theme";
 
 export default async function Home() {
@@ -25,19 +25,7 @@ export default async function Home() {
         <h1 style={siteTypography.pageTitle}>{t.home.sectionsHeading}</h1>
       </header>
 
-      <ul className="flex flex-col gap-4">
-        {SECTIONS.map((section) => (
-          <li key={section.href}>
-            <Link
-              href={section.href}
-              style={siteTypography.sectionLink}
-              className="no-underline"
-            >
-              {section.label}
-            </Link>
-          </li>
-        ))}
-      </ul>
+      <LandingHero sections={SECTIONS} />
     </main>
   );
 }

@@ -1,0 +1,540 @@
+<!--
+  PROTOTYPE — throwaway. Not wired into the app, not to be imported anywhere.
+
+  Question this answers: "what should the landing-page stickman doodle actually
+  look like?" — proportions, stroke weight, lean angle, breathing/blink timing.
+  The INTERACTION MODEL (hover/tap/keyboard-focus lean toward a nav item, idle
+  breathing+blink) was already decided in a design session; this file is for
+  tuning the numbers, not re-deciding the concept.
+
+  How to use: open this file directly in a browser (double-click it, or
+  `start design/prototypes/stickman-doodle.prototype.html`). No build step.
+  Drag the sliders on the right to tweak the figure, hover/click/Tab through
+  the nav items on the left to see it react. "Copy params" dumps the current
+  values as JSON so they can be hand-carried into the real implementation.
+
+  Delete this file (or fold the winning numbers into the real component) once
+  the look is settled — see AGENTS.md prototype rules.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE — stickman doodle</title>
+<style>
+  :root {
+    --bg: #f4efe6;
+    --fg: #262019;
+    --accent: #262019;
+    --stroke: 4;
+    --lean-transition: 260ms;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+    transition: background 200ms ease, color 200ms ease;
+  }
+
+  .page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 44px;
+    padding-right: 380px; /* leave room for the control panel */
+  }
+
+  .layout {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 48px;
+    width: 100%;
+    max-width: 760px;
+  }
+
+  .section-list {
+    display: flex;
+    flex-direction: column;
+    gap: 22px;
+  }
+
+  .section-list a {
+    font-size: 22px;
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    text-decoration: none;
+    opacity: 0.62;
+    transition: opacity 180ms ease, color 180ms ease;
+    outline: none;
+    width: fit-content;
+  }
+
+  .section-list a.is-active {
+    opacity: 1;
+    color: var(--accent);
+  }
+
+  .section-list a:focus-visible {
+    outline: 1.5px dashed var(--accent);
+    outline-offset: 4px;
+  }
+
+  .figure-stage {
+    flex: 0 0 auto;
+    width: 240px;
+    height: 320px;
+  }
+
+  .figure-stage svg { width: 100%; height: 100%; overflow: visible; }
+
+  /* the rigid torso+head unit that leans as one piece */
+  .lean-group {
+    transform-box: fill-box;
+    transform-origin: 50% 100%;
+    transform: rotate(var(--lean-deg, 0deg));
+    transition: transform var(--lean-transition) ease;
+  }
+
+  .breathe-group {
+    animation: breathe var(--breathe-period, 3.2s) ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(calc(-1 * var(--breathe-amp, 2px))); }
+  }
+
+  .eyes {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 70ms ease;
+  }
+  .eyes.blink { transform: scaleY(0.12); }
+
+  .prototype-badge {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    font-family: -apple-system, Segoe UI, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #b5502e;
+    color: #fff;
+    padding: 5px 9px;
+    border-radius: 4px;
+    opacity: 0.9;
+    z-index: 10;
+  }
+
+  .control-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 340px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(20, 16, 10, 0.94);
+    color: #f2ede2;
+    font-family: -apple-system, Segoe UI, sans-serif;
+    font-size: 12px;
+    padding: 20px 18px 40px;
+    z-index: 10;
+  }
+
+  .control-panel h2 {
+    font-size: 13px;
+    margin: 0 0 4px;
+    letter-spacing: 0.02em;
+  }
+  .control-panel .sub {
+    font-size: 11px;
+    opacity: 0.6;
+    margin: 0 0 18px;
+    line-height: 1.5;
+  }
+
+  .control-group {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .control-group:last-of-type { border-bottom: none; }
+
+  .control-group h3 {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+    margin: 0 0 10px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+  .row label { flex: 0 0 auto; opacity: 0.85; }
+  .row input[type="range"] { flex: 1 1 auto; margin: 0 8px; }
+  .row .val {
+    flex: 0 0 40px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+  .row input[type="color"] {
+    width: 34px; height: 22px; border: none; background: none; padding: 0;
+    flex: 0 0 auto;
+  }
+
+  .buttons {
+    display: flex;
+    gap: 8px;
+    margin-top: 4px;
+  }
+  .buttons button {
+    flex: 1;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 8px 6px;
+    background: #3a2f22;
+    color: #f2ede2;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .buttons button:hover { background: #4a3c2b; }
+
+  textarea#json-out {
+    width: 100%;
+    height: 90px;
+    margin-top: 8px;
+    background: #1a140d;
+    color: #cdbfa8;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 10.5px;
+    padding: 6px;
+    resize: vertical;
+  }
+</style>
+</head>
+<body>
+
+  <div class="prototype-badge">prototype — throwaway</div>
+
+  <div class="page">
+    <div class="layout">
+      <nav class="section-list" id="nav-list">
+        <a href="#" class="nav-item" data-index="0">Work</a>
+        <a href="#" class="nav-item" data-index="1">Writing</a>
+        <a href="#" class="nav-item" data-index="2">About</a>
+        <a href="#" class="nav-item" data-index="3">Contact</a>
+      </nav>
+
+      <div class="figure-stage">
+        <svg viewBox="0 0 240 320">
+          <!-- legs: planted, do not lean -->
+          <g id="legs" stroke-linecap="round">
+            <line id="legL" />
+            <line id="legR" />
+          </g>
+
+          <!-- rigid torso+head unit: this whole group rotates on lean -->
+          <g class="lean-group" id="leanGroup">
+            <g class="breathe-group" id="breatheGroup" stroke-linecap="round">
+              <line id="torso" />
+              <line id="armL" />
+              <line id="armR" />
+              <circle id="head" fill="none" />
+              <g id="brows" stroke-linecap="round">
+                <line id="browL" />
+                <line id="browR" />
+              </g>
+              <g class="eyes" id="eyes">
+                <circle id="eyeL" />
+                <circle id="eyeR" />
+              </g>
+            </g>
+          </g>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <h2>Doodle tuning</h2>
+    <p class="sub">Hover / click / Tab through the nav items on the left. Everything here is live — tweak until it feels right, then copy the params.</p>
+
+    <div class="control-group">
+      <h3>Proportions</h3>
+      <div class="row"><label>Stroke width</label><input type="range" id="strokeWidth" min="1" max="8" step="0.5"><span class="val" id="strokeWidth-val"></span></div>
+      <div class="row"><label>Head radius</label><input type="range" id="headRadius" min="8" max="26" step="1"><span class="val" id="headRadius-val"></span></div>
+      <div class="row"><label>Torso length</label><input type="range" id="torsoLength" min="50" max="120" step="1"><span class="val" id="torsoLength-val"></span></div>
+      <div class="row"><label>Leg length</label><input type="range" id="legLength" min="40" max="100" step="1"><span class="val" id="legLength-val"></span></div>
+      <div class="row"><label>Leg spread</label><input type="range" id="legSpread" min="10" max="45" step="1"><span class="val" id="legSpread-val"></span></div>
+      <div class="row"><label>Arm length</label><input type="range" id="armLength" min="30" max="80" step="1"><span class="val" id="armLength-val"></span></div>
+      <div class="row"><label>Arm spread</label><input type="range" id="armSpread" min="10" max="45" step="1"><span class="val" id="armSpread-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Face</h3>
+      <div class="row"><label>Eyebrow width</label><input type="range" id="eyebrowWidth" min="4" max="30" step="1"><span class="val" id="eyebrowWidth-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Lean reaction</h3>
+      <div class="row"><label>Lean min (top item)</label><input type="range" id="leanMin" min="0" max="20" step="1"><span class="val" id="leanMin-val"></span></div>
+      <div class="row"><label>Lean max (bottom item)</label><input type="range" id="leanMax" min="5" max="30" step="1"><span class="val" id="leanMax-val"></span></div>
+      <div class="row"><label>Lean speed</label><input type="range" id="leanTransitionMs" min="80" max="600" step="10"><span class="val" id="leanTransitionMs-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Idle: breathing</h3>
+      <div class="row"><label>Amplitude</label><input type="range" id="breatheAmp" min="0" max="6" step="0.5"><span class="val" id="breatheAmp-val"></span></div>
+      <div class="row"><label>Period (s)</label><input type="range" id="breathePeriod" min="1.5" max="6" step="0.1"><span class="val" id="breathePeriod-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Idle: blink</h3>
+      <div class="row"><label>Min gap (s)</label><input type="range" id="blinkMinGap" min="1" max="8" step="0.5"><span class="val" id="blinkMinGap-val"></span></div>
+      <div class="row"><label>Max gap (s)</label><input type="range" id="blinkMaxGap" min="2" max="15" step="0.5"><span class="val" id="blinkMaxGap-val"></span></div>
+      <div class="row"><label>Duration (ms)</label><input type="range" id="blinkDuration" min="60" max="300" step="10"><span class="val" id="blinkDuration-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Color</h3>
+      <div class="row"><label>Figure / ink</label><input type="color" id="figureColor"></div>
+      <div class="row"><label>Background</label><input type="color" id="bgColor"></div>
+      <div class="row"><label>Active label</label><input type="color" id="accentColor"></div>
+    </div>
+
+    <div class="buttons">
+      <button id="resetBtn">Reset defaults</button>
+      <button id="copyBtn">Copy params</button>
+    </div>
+    <textarea id="json-out" readonly></textarea>
+  </div>
+
+<script>
+(function () {
+  var DEFAULTS = {
+    strokeWidth: 1,
+    headRadius: 26,
+    torsoLength: 108,
+    legLength: 70,
+    legSpread: 24,
+    armLength: 50,
+    armSpread: 45,
+    eyebrowWidth: 14,
+    leanMin: 4,
+    leanMax: 21,
+    leanTransitionMs: 260,
+    breatheAmp: 3.5,
+    breathePeriod: 2.2,
+    blinkMinGap: 1,
+    blinkMaxGap: 4.5,
+    blinkDuration: 100,
+    figureColor: "#262019",
+    bgColor: "#f4efe6",
+    accentColor: "#262019"
+  };
+
+  var S = Object.assign({}, DEFAULTS);
+
+  var GROUND_Y = 280;
+  var CENTER_X = 120;
+  var NECK_GAP = 3;
+
+  var el = {
+    legL: document.getElementById("legL"),
+    legR: document.getElementById("legR"),
+    leanGroup: document.getElementById("leanGroup"),
+    breatheGroup: document.getElementById("breatheGroup"),
+    torso: document.getElementById("torso"),
+    armL: document.getElementById("armL"),
+    armR: document.getElementById("armR"),
+    head: document.getElementById("head"),
+    brows: document.getElementById("brows"),
+    browL: document.getElementById("browL"),
+    browR: document.getElementById("browR"),
+    eyes: document.getElementById("eyes"),
+    eyeL: document.getElementById("eyeL"),
+    eyeR: document.getElementById("eyeR")
+  };
+
+  var navItems = Array.prototype.slice.call(document.querySelectorAll(".nav-item"));
+
+  function render() {
+    var hipY = GROUND_Y - S.legLength;
+    var neckY = hipY - S.torsoLength;
+    var headCenterY = neckY - S.headRadius - NECK_GAP;
+    var shoulderY = neckY + S.torsoLength * 0.12;
+    var handY = shoulderY + S.armLength;
+
+    el.legL.setAttribute("x1", CENTER_X); el.legL.setAttribute("y1", hipY);
+    el.legL.setAttribute("x2", CENTER_X - S.legSpread); el.legL.setAttribute("y2", GROUND_Y);
+    el.legR.setAttribute("x1", CENTER_X); el.legR.setAttribute("y1", hipY);
+    el.legR.setAttribute("x2", CENTER_X + S.legSpread); el.legR.setAttribute("y2", GROUND_Y);
+
+    el.torso.setAttribute("x1", CENTER_X); el.torso.setAttribute("y1", neckY);
+    el.torso.setAttribute("x2", CENTER_X); el.torso.setAttribute("y2", hipY);
+
+    el.armL.setAttribute("x1", CENTER_X); el.armL.setAttribute("y1", shoulderY);
+    el.armL.setAttribute("x2", CENTER_X - S.armSpread); el.armL.setAttribute("y2", handY);
+    el.armR.setAttribute("x1", CENTER_X); el.armR.setAttribute("y1", shoulderY);
+    el.armR.setAttribute("x2", CENTER_X + S.armSpread); el.armR.setAttribute("y2", handY);
+
+    el.head.setAttribute("cx", CENTER_X); el.head.setAttribute("cy", headCenterY);
+    el.head.setAttribute("r", S.headRadius);
+
+    var eyeOffsetX = S.headRadius * 0.38;
+    var eyeY = headCenterY - S.headRadius * 0.05;
+    var eyeR = Math.max(1.2, S.headRadius * 0.11);
+    el.eyeL.setAttribute("cx", CENTER_X - eyeOffsetX); el.eyeL.setAttribute("cy", eyeY); el.eyeL.setAttribute("r", eyeR);
+    el.eyeR.setAttribute("cx", CENTER_X + eyeOffsetX); el.eyeR.setAttribute("cy", eyeY); el.eyeR.setAttribute("r", eyeR);
+
+    var browY = eyeY - S.headRadius * 0.34;
+    var browHalf = S.eyebrowWidth / 2;
+    el.browL.setAttribute("x1", CENTER_X - eyeOffsetX - browHalf); el.browL.setAttribute("y1", browY);
+    el.browL.setAttribute("x2", CENTER_X - eyeOffsetX + browHalf); el.browL.setAttribute("y2", browY);
+    el.browR.setAttribute("x1", CENTER_X + eyeOffsetX - browHalf); el.browR.setAttribute("y1", browY);
+    el.browR.setAttribute("x2", CENTER_X + eyeOffsetX + browHalf); el.browR.setAttribute("y2", browY);
+
+    [el.legL, el.legR, el.torso, el.armL, el.armR, el.head, el.browL, el.browR].forEach(function (n) {
+      n.setAttribute("stroke", S.figureColor);
+      n.setAttribute("stroke-width", S.strokeWidth);
+    });
+    el.eyeL.setAttribute("fill", S.figureColor);
+    el.eyeR.setAttribute("fill", S.figureColor);
+
+    document.documentElement.style.setProperty("--bg", S.bgColor);
+    document.documentElement.style.setProperty("--fg", S.figureColor);
+    document.documentElement.style.setProperty("--accent", S.accentColor);
+    document.documentElement.style.setProperty("--breathe-amp", S.breatheAmp + "px");
+    document.documentElement.style.setProperty("--breathe-period", S.breathePeriod + "s");
+    document.documentElement.style.setProperty("--lean-transition", S.leanTransitionMs + "ms");
+
+    applyLean();
+  }
+
+  // --- lean reaction: hover (mouse) / focus (keyboard) / click (tap) ---
+  var hoverIndex = null, focusIndex = null, pinnedIndex = null;
+
+  function leanAngleForIndex(i) {
+    var n = navItems.length;
+    var t = n > 1 ? i / (n - 1) : 0;
+    var mag = S.leanMin + (S.leanMax - S.leanMin) * t;
+    return -mag; // always negative: lean toward the nav column on the left
+  }
+
+  function effectiveIndex() {
+    if (focusIndex !== null) return focusIndex;
+    if (hoverIndex !== null) return hoverIndex;
+    return pinnedIndex;
+  }
+
+  function applyLean() {
+    var idx = effectiveIndex();
+    var deg = idx === null ? 0 : leanAngleForIndex(idx);
+    el.leanGroup.style.setProperty("--lean-deg", deg + "deg");
+    navItems.forEach(function (a, i) {
+      a.classList.toggle("is-active", i === idx);
+    });
+  }
+
+  // mouseleave lives on the whole list, not each item: moving the cursor
+  // through the gap between two labels must not pass through the "nothing
+  // hovered" state, or the figure snaps back to idle and then out again
+  // between every pair of items instead of leaning smoothly from one to
+  // the next.
+  document.getElementById("nav-list").addEventListener("mouseleave", function () {
+    hoverIndex = null;
+    applyLean();
+  });
+
+  navItems.forEach(function (a, i) {
+    a.addEventListener("mouseenter", function () { hoverIndex = i; applyLean(); });
+    a.addEventListener("focus", function () { focusIndex = i; applyLean(); });
+    a.addEventListener("blur", function () { focusIndex = null; applyLean(); });
+    a.addEventListener("click", function (e) {
+      e.preventDefault(); // placeholder links only, this is a doodle prototype
+      pinnedIndex = i;
+      applyLean();
+    });
+  });
+
+  document.addEventListener("click", function (e) {
+    if (!e.target.closest(".nav-item")) {
+      pinnedIndex = null;
+      applyLean();
+    }
+  });
+
+  // --- blink loop ---
+  var blinkTimer = null;
+  function scheduleBlink() {
+    clearTimeout(blinkTimer);
+    var gap = (S.blinkMinGap + Math.random() * (S.blinkMaxGap - S.blinkMinGap)) * 1000;
+    blinkTimer = setTimeout(function () {
+      el.eyes.classList.add("blink");
+      setTimeout(function () {
+        el.eyes.classList.remove("blink");
+        scheduleBlink();
+      }, S.blinkDuration);
+    }, gap);
+  }
+
+  // --- controls wiring ---
+  function syncControlsFromState() {
+    Object.keys(DEFAULTS).forEach(function (key) {
+      var input = document.getElementById(key);
+      if (!input) return;
+      input.value = S[key];
+      var valSpan = document.getElementById(key + "-val");
+      if (valSpan) valSpan.textContent = S[key];
+    });
+  }
+
+  Object.keys(DEFAULTS).forEach(function (key) {
+    var input = document.getElementById(key);
+    if (!input) return;
+    input.addEventListener("input", function () {
+      var isColor = input.type === "color";
+      S[key] = isColor ? input.value : parseFloat(input.value);
+      var valSpan = document.getElementById(key + "-val");
+      if (valSpan) valSpan.textContent = S[key];
+      render();
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    S = Object.assign({}, DEFAULTS);
+    syncControlsFromState();
+    render();
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var json = JSON.stringify(S, null, 2);
+    document.getElementById("json-out").value = json;
+    if (navigator.clipboard) navigator.clipboard.writeText(json).catch(function () {});
+  });
+
+  syncControlsFromState();
+  render();
+  scheduleBlink();
+})();
+</script>
+</body>
+</html>
