@@ -47,6 +47,54 @@ export const siteTypography = {
     color: siteColors.textCardTitle,
     cursor: "pointer",
   },
+  bodyParagraph: {
+    fontFamily: siteFonts.serif,
+    fontSize: "17px",
+    fontWeight: 400,
+    lineHeight: 1.7,
+    color: siteColors.textPrimary,
+  },
+  bodyHeading1: {
+    fontFamily: siteFonts.serif,
+    fontSize: "30px",
+    fontWeight: 440,
+    lineHeight: 1.25,
+    letterSpacing: "-0.01em",
+    color: siteColors.textCardTitle,
+  },
+  bodyHeading2: {
+    fontFamily: siteFonts.serif,
+    fontSize: "26px",
+    fontWeight: 440,
+    lineHeight: 1.3,
+    letterSpacing: "-0.01em",
+    color: siteColors.textCardTitle,
+  },
+  bodyHeading3: {
+    fontFamily: siteFonts.serif,
+    fontSize: "21px",
+    fontWeight: 440,
+    lineHeight: 1.35,
+    color: siteColors.textCardTitle,
+  },
+  bodyQuote: {
+    fontFamily: siteFonts.serif,
+    fontSize: "17px",
+    fontStyle: "italic" as const,
+    lineHeight: 1.7,
+    color: siteColors.textSecondary,
+  },
+  bodyCode: {
+    fontFamily: siteFonts.sans,
+    fontSize: "13.5px",
+    color: siteColors.textCardTitle,
+  },
+  bodyCaption: {
+    fontFamily: siteFonts.sans,
+    fontSize: "12.5px",
+    lineHeight: 1.5,
+    color: siteColors.textMuted,
+  },
 } as const;
 
 export const siteLayout = {
