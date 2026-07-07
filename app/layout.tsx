@@ -3,6 +3,7 @@ import { Piazzolla, Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
+import Footer from "./Footer";
 import InternalNavTracker from "./InternalNavTracker";
 import LocaleToggle from "./LocaleToggle";
 import Navbar from "./Navbar";
@@ -45,6 +46,7 @@ export default async function RootLayout({
         <LocaleProvider initialLocale={locale}>
           <InternalNavTracker />
           <Navbar>{children}</Navbar>
+          <Footer />
           <LocaleToggle />
         </LocaleProvider>
       </body>
