@@ -19,7 +19,7 @@ export const STICKMAN_PARAMS = {
 } as const;
 
 export const LEAN_MIN_DEG = 4;
-export const LEAN_MAX_DEG = 21;
+export const LEAN_MAX_DEG = 16;
 export const LEAN_TRANSITION_MS = 260;
 
 /** Always leans toward the nav column (negative); magnitude grows for lower items. */
