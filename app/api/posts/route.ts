@@ -11,13 +11,13 @@ export async function GET(request: Request) {
 
   const posts = includeDrafts
     ? await sql`
-        select id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
+        select id, title, subtitle, title_es, subtitle_es, slug, status, created_at, updated_at, published_at, image_url
         from posts
         order by created_at desc
         limit ${limit} offset ${offset}
       `
     : await sql`
-        select id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
+        select id, title, subtitle, title_es, subtitle_es, slug, status, created_at, updated_at, published_at, image_url
         from posts
         where status = 'published'
         order by published_at desc
@@ -40,6 +40,9 @@ export async function POST(request: Request) {
     slug: requestedSlug,
     subtitle = null,
     image_url = null,
+    title_es = null,
+    subtitle_es = null,
+    content_es = null,
   } = body
 
   if (!title || !content) {
@@ -54,9 +57,9 @@ export async function POST(request: Request) {
 
   try {
     const [post] = await sql`
-      insert into posts (title, subtitle, slug, content, status, published_at, image_url)
-      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url})
-      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
+      insert into posts (title, subtitle, slug, content, status, published_at, image_url, title_es, subtitle_es, content_es)
+      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url}, ${title_es}, ${subtitle_es}, ${content_es})
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es
     `
     return NextResponse.json(post, { status: 201 })
   } catch (error) {

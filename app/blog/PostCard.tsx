@@ -9,12 +9,16 @@ export type Post = {
   slug: string;
   title: string;
   subtitle: string | null;
+  title_es?: string | null;
+  subtitle_es?: string | null;
   published_at: string | null;
   image_url: string | null;
 };
 
 export default function PostCard({ post }: { post: Post }) {
   const { locale } = useLocale();
+  const title = locale === "es" && post.title_es ? post.title_es : post.title;
+  const subtitle = locale === "es" && post.subtitle_es ? post.subtitle_es : post.subtitle;
 
   return (
     <Link
@@ -41,12 +45,12 @@ export default function PostCard({ post }: { post: Post }) {
         </span>
 
         <h3 style={{ ...blogTypography.cardTitle, textWrap: "pretty" }}>
-          {post.title}
+          {title}
         </h3>
 
-        {post.subtitle && (
+        {subtitle && (
           <p style={{ ...blogTypography.cardSubtitle, textWrap: "pretty" }}>
-            {post.subtitle}
+            {subtitle}
           </p>
         )}
       </div>

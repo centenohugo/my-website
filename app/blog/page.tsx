@@ -10,7 +10,7 @@ export default async function BlogPage() {
   const t = getDictionary(locale);
 
   const initialPosts = await sql<Post[]>`
-    select slug, title, subtitle, published_at, image_url
+    select slug, title, subtitle, title_es, subtitle_es, published_at, image_url
     from posts
     where status = 'published'
     order by published_at desc

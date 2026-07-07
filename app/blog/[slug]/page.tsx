@@ -10,6 +10,9 @@ type PostDetail = {
   title: string;
   subtitle: string | null;
   content: string;
+  title_es: string | null;
+  subtitle_es: string | null;
+  content_es: string | null;
   published_at: string | null;
   image_url: string | null;
 };
@@ -23,7 +26,7 @@ export default async function PostPage({
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
 
   const [post] = await sql<PostDetail[]>`
-    select title, subtitle, content, published_at, image_url
+    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url
     from posts
     where slug = ${slug} and status = 'published'
   `;
@@ -31,6 +34,10 @@ export default async function PostPage({
   if (!post) {
     notFound();
   }
+
+  const title = locale === "es" && post.title_es ? post.title_es : post.title;
+  const subtitle = locale === "es" && post.subtitle_es ? post.subtitle_es : post.subtitle;
+  const content = locale === "es" && post.content_es ? post.content_es : post.content;
 
   return (
     <main className="pb-16" style={{ paddingTop: blogLayout.headerTopSpace }}>
@@ -57,9 +64,9 @@ export default async function PostPage({
           <span className="uppercase" style={blogTypography.postDate}>
             {formatFullDate(post.published_at, locale)}
           </span>
-          <h1 style={{ ...blogTypography.postTitle, textWrap: "pretty" }}>{post.title}</h1>
-          {post.subtitle && (
-            <p style={{ ...blogTypography.postSubtitle, textWrap: "pretty" }}>{post.subtitle}</p>
+          <h1 style={{ ...blogTypography.postTitle, textWrap: "pretty" }}>{title}</h1>
+          {subtitle && (
+            <p style={{ ...blogTypography.postSubtitle, textWrap: "pretty" }}>{subtitle}</p>
           )}
         </div>
       </div>
@@ -70,7 +77,7 @@ export default async function PostPage({
       >
         <hr className="my-8" style={{ borderColor: blogColors.dateMono }} />
 
-        <MarkdownContent content={post.content} />
+        <MarkdownContent content={content} />
       </div>
     </main>
   );

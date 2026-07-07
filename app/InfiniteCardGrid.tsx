@@ -25,6 +25,18 @@ function writeStoredState<T>(stateKey: string, state: StoredState<T>) {
   }
 }
 
+function dedupeByKey<T>(items: T[], getKey: (item: T) => string): T[] {
+  const seen = new Set<string>();
+  const result: T[] = [];
+  for (const item of items) {
+    const key = getKey(item);
+    if (seen.has(key)) continue;
+    seen.add(key);
+    result.push(item);
+  }
+  return result;
+}
+
 export default function InfiniteCardGrid<T>({
   stateKey,
   initialItems,
@@ -56,8 +68,16 @@ export default function InfiniteCardGrid<T>({
   doneColor: string;
   loadingColor: string;
 }) {
-  const [restoredState] = useState(() => readStoredState<T>(stateKey));
-  const [items, setItems] = useState(restoredState?.items ?? initialItems);
+  const [restoredState] = useState(() => {
+    if (typeof window === "undefined") return null;
+    const [navEntry] = performance.getEntriesByType("navigation");
+    const isBackForward =
+      navEntry instanceof PerformanceNavigationTiming && navEntry.type === "back_forward";
+    return isBackForward ? readStoredState<T>(stateKey) : null;
+  });
+  const [items, setItems] = useState(() =>
+    dedupeByKey(restoredState?.items ?? initialItems, getKey)
+  );
   const [isDone, setIsDone] = useState(
     restoredState?.isDone ?? initialItems.length < initialCount
   );
@@ -132,7 +152,9 @@ export default function InfiniteCardGrid<T>({
           );
           const more: T[] = await res.json();
           setItems((prev) => {
-            const next = [...prev, ...more];
+            const seen = new Set(prev.map(getKey));
+            const deduped = more.filter((item) => !seen.has(getKey(item)));
+            const next = [...prev, ...deduped];
             itemsRef.current = next;
             return next;
           });

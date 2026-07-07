@@ -37,7 +37,17 @@ export async function PUT(
   }
 
   const body = await request.json()
-  const { title, content, status, slug: requestedSlug, subtitle, image_url } = body
+  const {
+    title,
+    content,
+    status,
+    slug: requestedSlug,
+    subtitle,
+    image_url,
+    title_es,
+    subtitle_es,
+    content_es,
+  } = body
 
   const newSlug = requestedSlug ? slugify(requestedSlug) : existing.slug
   const newStatus = status ?? existing.status
@@ -56,9 +66,12 @@ export async function PUT(
         status = ${newStatus},
         published_at = ${publishedAt},
         image_url = ${image_url !== undefined ? image_url : existing.image_url},
+        title_es = ${title_es !== undefined ? title_es : existing.title_es},
+        subtitle_es = ${subtitle_es !== undefined ? subtitle_es : existing.subtitle_es},
+        content_es = ${content_es !== undefined ? content_es : existing.content_es},
         updated_at = now()
       where id = ${existing.id}
-      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es
     `
     return NextResponse.json(updated)
   } catch (error) {
