@@ -151,14 +151,21 @@ export default function InfiniteCardGrid<T>({
             `${endpoint}?limit=${loadMoreCount}&offset=${itemsRef.current.length}`
           );
           const more: T[] = await res.json();
-          setItems((prev) => {
-            const seen = new Set(prev.map(getKey));
-            const deduped = more.filter((item) => !seen.has(getKey(item)));
-            const next = [...prev, ...deduped];
-            itemsRef.current = next;
-            return next;
-          });
-          if (more.length < loadMoreCount) {
+          const seen = new Set(itemsRef.current.map(getKey));
+          const deduped = more.filter((item) => !seen.has(getKey(item)));
+          if (deduped.length > 0) {
+            setItems((prev) => {
+              const next = [...prev, ...deduped];
+              itemsRef.current = next;
+              return next;
+            });
+          }
+          // Stop when the server ran out of rows, or when a full page added
+          // nothing new. The latter guards against an infinite refetch loop:
+          // offset is derived from items.length, so if every returned row is a
+          // duplicate the offset never advances and we'd request the same page
+          // forever, stuck on the loading indicator.
+          if (more.length < loadMoreCount || deduped.length === 0) {
             isDoneRef.current = true;
             setIsDone(true);
           }
