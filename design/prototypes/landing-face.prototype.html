@@ -1,0 +1,510 @@
+<!--
+  PROTOTYPE — throwaway. Not wired into the app, not to be imported anywhere.
+
+  Question this answers: "what should the redesigned landing page look like?"
+  — a giant doodle head peeking up from the bottom edge of the viewport, the
+  section titles in a single row above it, and the eyes following the cursor
+  anywhere on the page. Hovering the head makes it blink (same logic as the
+  footer face); random idle blinks keep running. The INTERACTION MODEL was
+  decided in a grilling session:
+    - head only (no body), cut off by the bottom viewport edge
+    - dot eyes nudge toward the cursor inside an invisible orbit
+    - full-viewport page, no scroll, no page heading, links keep opacity fade
+    - mobile / touch: section titles stack vertically, eyes idle + blink only
+  This file is for tuning the numbers, not re-deciding the concept.
+
+  How to use: open this file directly in a browser (double-click it, or
+  `start design/prototypes/landing-face.prototype.html`). No build step.
+  Move the cursor around, hover the head, hover the links, then drag the
+  sliders on the right until it feels right. Narrow the window under 640px
+  (or use devtools device mode) to check the mobile layout. "Copy params"
+  dumps the current values as JSON so they can be hand-carried into the
+  real implementation.
+
+  Delete this file (or fold the winning numbers into the real component) once
+  the look is settled — see AGENTS.md prototype rules.
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PROTOTYPE — landing face</title>
+<style>
+  :root {
+    --bg: #f4efe6;
+    --fg: #262019;
+    --accent: #262019;
+    --link-size: 26px;
+    --link-gap: 64px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    height: 100%;
+    overflow: hidden; /* full-viewport landing: nothing to scroll */
+    background: var(--bg);
+    color: var(--fg);
+    font-family: Georgia, "Iowan Old Style", "Palatino Linotype", serif;
+  }
+
+  .page {
+    position: relative;
+    height: 100vh;
+    padding-right: 360px; /* leave room for the control panel */
+  }
+
+  /* section titles: one row, vertically centered in the space above the head */
+  .section-list {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: var(--head-visible-h, 40vh); /* set from JS = visible head height */
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: var(--link-gap);
+  }
+
+  .section-list a {
+    font-size: var(--link-size);
+    letter-spacing: -0.01em;
+    color: var(--fg);
+    text-decoration: none;
+    opacity: 0.62;
+    transition: opacity 180ms ease, color 180ms ease;
+    outline: none;
+  }
+  .section-list a:hover,
+  .section-list a:focus-visible {
+    opacity: 1;
+    color: var(--accent);
+  }
+  .section-list a:focus-visible {
+    outline: 1.5px dashed var(--accent);
+    outline-offset: 4px;
+  }
+
+  /* the giant head, horizontally centered, cut off by the bottom edge */
+  .face-stage {
+    position: absolute;
+    left: 50%;
+    bottom: 0;
+    transform: translateX(-50%);
+    line-height: 0;
+  }
+  .face-stage svg { display: block; }
+
+  /* blink squashes each eye dot on its own center; the cursor-follow
+     translate lives on the parent group, so the two never fight */
+  .eye-dot {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition: transform 70ms ease;
+  }
+  .blink .eye-dot { transform: scaleY(0.12); }
+
+  /* mobile: stacked titles, no room stolen by the control panel */
+  @media (max-width: 640px) {
+    .page { padding-right: 0; }
+    .section-list {
+      flex-direction: column;
+      gap: calc(var(--link-gap) / 2);
+    }
+    .control-panel { display: none; }
+  }
+
+  .prototype-badge {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    font-family: -apple-system, Segoe UI, sans-serif;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    background: #b5502e;
+    color: #fff;
+    padding: 5px 9px;
+    border-radius: 4px;
+    opacity: 0.9;
+    z-index: 10;
+  }
+
+  .control-panel {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 340px;
+    height: 100%;
+    overflow-y: auto;
+    background: rgba(20, 16, 10, 0.94);
+    color: #f2ede2;
+    font-family: -apple-system, Segoe UI, sans-serif;
+    font-size: 12px;
+    padding: 20px 18px 40px;
+    z-index: 10;
+  }
+
+  .control-panel h2 { font-size: 13px; margin: 0 0 4px; letter-spacing: 0.02em; }
+  .control-panel .sub {
+    font-size: 11px; opacity: 0.6; margin: 0 0 18px; line-height: 1.5;
+  }
+
+  .control-group {
+    margin-bottom: 16px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+  .control-group:last-of-type { border-bottom: none; }
+  .control-group h3 {
+    font-size: 10.5px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    opacity: 0.55;
+    margin: 0 0 10px;
+  }
+
+  .row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 9px;
+  }
+  .row label { flex: 0 0 auto; opacity: 0.85; }
+  .row input[type="range"] { flex: 1 1 auto; margin: 0 8px; }
+  .row .val {
+    flex: 0 0 44px;
+    text-align: right;
+    font-variant-numeric: tabular-nums;
+    opacity: 0.7;
+  }
+  .row input[type="color"] {
+    width: 34px; height: 22px; border: none; background: none; padding: 0;
+    flex: 0 0 auto;
+  }
+  .row input[type="checkbox"] { flex: 0 0 auto; }
+
+  .buttons { display: flex; gap: 8px; margin-top: 4px; }
+  .buttons button {
+    flex: 1;
+    font-family: inherit;
+    font-size: 11px;
+    padding: 8px 6px;
+    background: #3a2f22;
+    color: #f2ede2;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .buttons button:hover { background: #4a3c2b; }
+
+  textarea#json-out {
+    width: 100%;
+    height: 90px;
+    margin-top: 8px;
+    background: #1a140d;
+    color: #cdbfa8;
+    border: 1px solid rgba(255,255,255,0.15);
+    border-radius: 4px;
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 10.5px;
+    padding: 6px;
+    resize: vertical;
+  }
+</style>
+</head>
+<body>
+
+  <div class="prototype-badge">prototype — throwaway</div>
+
+  <div class="page">
+    <nav class="section-list" id="nav-list">
+      <a href="#">Blog</a>
+      <a href="#">Projects</a>
+    </nav>
+
+    <div class="face-stage" id="faceStage">
+      <svg id="faceSvg">
+        <g id="faceInk" stroke-linecap="round" fill="none">
+          <circle id="head" />
+          <line id="browL" />
+          <line id="browR" />
+        </g>
+        <g id="eyes">
+          <g id="eyeMoveL"><circle class="eye-dot" id="eyeL" stroke="none" /></g>
+          <g id="eyeMoveR"><circle class="eye-dot" id="eyeR" stroke="none" /></g>
+        </g>
+        <!-- invisible hit area so hovering "the head" works even though the
+             head circle itself has no fill -->
+        <circle id="headHit" fill="transparent" stroke="none" />
+      </svg>
+    </div>
+  </div>
+
+  <div class="control-panel">
+    <h2>Landing face tuning</h2>
+    <p class="sub">Move the cursor anywhere — the eyes follow. Hover the head to make it blink. Narrow the window under 640px to preview the mobile layout (stacked titles, idle eyes). Tweak, then copy the params.</p>
+
+    <div class="control-group">
+      <h3>Head</h3>
+      <div class="row"><label>Head radius (px)</label><input type="range" id="headRadius" min="100" max="340" step="5"><span class="val" id="headRadius-val"></span></div>
+      <div class="row"><label>Visible fraction</label><input type="range" id="visibleFrac" min="0.35" max="0.95" step="0.01"><span class="val" id="visibleFrac-val"></span></div>
+      <div class="row"><label>Stroke width</label><input type="range" id="strokeWidth" min="1" max="8" step="0.5"><span class="val" id="strokeWidth-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Face</h3>
+      <div class="row"><label>Eye size (× R)</label><input type="range" id="eyeScale" min="0.04" max="0.2" step="0.005"><span class="val" id="eyeScale-val"></span></div>
+      <div class="row"><label>Eye spacing (× R)</label><input type="range" id="eyeOffsetScale" min="0.2" max="0.6" step="0.01"><span class="val" id="eyeOffsetScale-val"></span></div>
+      <div class="row"><label>Brow width (× R)</label><input type="range" id="browScale" min="0.2" max="1" step="0.02"><span class="val" id="browScale-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Cursor follow</h3>
+      <div class="row"><label>Eye travel (× R)</label><input type="range" id="travelScale" min="0.02" max="0.25" step="0.005"><span class="val" id="travelScale-val"></span></div>
+      <div class="row"><label>Smoothing</label><input type="range" id="followEase" min="0.03" max="0.5" step="0.01"><span class="val" id="followEase-val"></span></div>
+      <div class="row"><label>Brows follow (×)</label><input type="range" id="browFollow" min="0" max="1" step="0.05"><span class="val" id="browFollow-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Blink</h3>
+      <div class="row"><label>Min gap (s)</label><input type="range" id="blinkMinGap" min="1" max="8" step="0.5"><span class="val" id="blinkMinGap-val"></span></div>
+      <div class="row"><label>Max gap (s)</label><input type="range" id="blinkMaxGap" min="2" max="15" step="0.5"><span class="val" id="blinkMaxGap-val"></span></div>
+      <div class="row"><label>Duration (ms)</label><input type="range" id="blinkDuration" min="60" max="300" step="10"><span class="val" id="blinkDuration-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Section titles</h3>
+      <div class="row"><label>Font size (px)</label><input type="range" id="linkSize" min="16" max="48" step="1"><span class="val" id="linkSize-val"></span></div>
+      <div class="row"><label>Gap (px)</label><input type="range" id="linkGap" min="20" max="140" step="4"><span class="val" id="linkGap-val"></span></div>
+    </div>
+
+    <div class="control-group">
+      <h3>Color</h3>
+      <div class="row"><label>Figure / ink</label><input type="color" id="figureColor"></div>
+      <div class="row"><label>Background</label><input type="color" id="bgColor"></div>
+      <div class="row"><label>Active label</label><input type="color" id="accentColor"></div>
+    </div>
+
+    <div class="buttons">
+      <button id="resetBtn">Reset defaults</button>
+      <button id="copyBtn">Copy params</button>
+    </div>
+    <textarea id="json-out" readonly></textarea>
+  </div>
+
+<script>
+(function () {
+  var DEFAULTS = {
+    headRadius: 210,
+    visibleFrac: 0.62,   // fraction of the head's diameter visible above the bottom edge
+    strokeWidth: 2,
+    eyeScale: 0.11,      // eye dot radius as a fraction of head radius (matches footer face)
+    eyeOffsetScale: 0.38,
+    browScale: 0.54,     // 14px brow at R=26 in the old figure ≈ 0.54 × R
+    travelScale: 0.08,   // max eye excursion as a fraction of head radius
+    followEase: 0.16,    // rAF lerp factor: higher = snappier
+    browFollow: 0.3,     // brows drift with the eyes at this multiplier (0 = static)
+    blinkMinGap: 1,
+    blinkMaxGap: 4.5,
+    blinkDuration: 100,
+    linkSize: 26,
+    linkGap: 64,
+    figureColor: "#262019",
+    bgColor: "#f4efe6",
+    accentColor: "#262019"
+  };
+
+  var S = Object.assign({}, DEFAULTS);
+
+  var el = {
+    svg: document.getElementById("faceSvg"),
+    stage: document.getElementById("faceStage"),
+    ink: document.getElementById("faceInk"),
+    head: document.getElementById("head"),
+    headHit: document.getElementById("headHit"),
+    browL: document.getElementById("browL"),
+    browR: document.getElementById("browR"),
+    eyes: document.getElementById("eyes"),
+    eyeMoveL: document.getElementById("eyeMoveL"),
+    eyeMoveR: document.getElementById("eyeMoveR"),
+    eyeL: document.getElementById("eyeL"),
+    eyeR: document.getElementById("eyeR")
+  };
+
+  var touchOnly = window.matchMedia("(hover: none)").matches;
+
+  // rest positions of the eyes in *page* coordinates, refreshed on render/resize
+  var eyeRestL = { x: 0, y: 0 }, eyeRestR = { x: 0, y: 0 };
+
+  function effectiveRadius() {
+    // never let the head outgrow the window; on small screens it hugs ~80vw
+    return Math.min(S.headRadius, window.innerWidth * 0.4);
+  }
+
+  function render() {
+    var R = effectiveRadius();
+    var pad = S.strokeWidth + 2;
+    var w = R * 2 + pad * 2;
+    var visibleH = Math.round(R * 2 * S.visibleFrac) + pad;
+    var cx = R + pad;
+    var cy = pad + R; // head center in svg coords
+
+    el.svg.setAttribute("width", w);
+    el.svg.setAttribute("height", visibleH);
+    el.svg.setAttribute("viewBox", "0 0 " + w + " " + visibleH);
+
+    el.head.setAttribute("cx", cx); el.head.setAttribute("cy", cy);
+    el.head.setAttribute("r", R);
+    el.headHit.setAttribute("cx", cx); el.headHit.setAttribute("cy", cy);
+    el.headHit.setAttribute("r", R);
+
+    var eyeOffsetX = R * S.eyeOffsetScale;
+    var eyeY = cy - R * 0.05;
+    var eyeR = Math.max(1.2, R * S.eyeScale);
+    el.eyeL.setAttribute("cx", cx - eyeOffsetX); el.eyeL.setAttribute("cy", eyeY); el.eyeL.setAttribute("r", eyeR);
+    el.eyeR.setAttribute("cx", cx + eyeOffsetX); el.eyeR.setAttribute("cy", eyeY); el.eyeR.setAttribute("r", eyeR);
+
+    var browY = eyeY - R * 0.34;
+    var browHalf = (R * S.browScale) / 2;
+    el.browL.setAttribute("x1", cx - eyeOffsetX - browHalf); el.browL.setAttribute("y1", browY);
+    el.browL.setAttribute("x2", cx - eyeOffsetX + browHalf); el.browL.setAttribute("y2", browY);
+    el.browR.setAttribute("x1", cx + eyeOffsetX - browHalf); el.browR.setAttribute("y1", browY);
+    el.browR.setAttribute("x2", cx + eyeOffsetX + browHalf); el.browR.setAttribute("y2", browY);
+
+    el.ink.setAttribute("stroke", S.figureColor);
+    el.ink.setAttribute("stroke-width", S.strokeWidth);
+    el.eyeL.setAttribute("fill", S.figureColor);
+    el.eyeR.setAttribute("fill", S.figureColor);
+
+    var root = document.documentElement.style;
+    root.setProperty("--bg", S.bgColor);
+    root.setProperty("--fg", S.figureColor);
+    root.setProperty("--accent", S.accentColor);
+    root.setProperty("--link-size", S.linkSize + "px");
+    root.setProperty("--link-gap", S.linkGap + "px");
+    root.setProperty("--head-visible-h", visibleH + "px");
+
+    // eye rest positions in page coords, for the cursor-follow math
+    var rect = el.svg.getBoundingClientRect();
+    eyeRestL.x = rect.left + (cx - eyeOffsetX);
+    eyeRestL.y = rect.top + eyeY;
+    eyeRestR.x = rect.left + (cx + eyeOffsetX);
+    eyeRestR.y = rect.top + eyeY;
+  }
+
+  // --- cursor follow: dots (and brows, attenuated) drift toward the cursor ---
+  var mouse = null; // last cursor position, null until first move
+  var cur = { lx: 0, ly: 0, rx: 0, ry: 0 }; // current smoothed offsets
+
+  function targetOffset(rest) {
+    if (!mouse) return { x: 0, y: 0 };
+    var dx = mouse.x - rest.x;
+    var dy = mouse.y - rest.y;
+    var dist = Math.hypot(dx, dy);
+    if (dist < 1) return { x: 0, y: 0 };
+    var travel = effectiveRadius() * S.travelScale;
+    // ease in: a cursor near the eye pulls less than a faraway one
+    var mag = Math.min(1, dist / (effectiveRadius() * 1.5)) * travel;
+    return { x: (dx / dist) * mag, y: (dy / dist) * mag };
+  }
+
+  function tick() {
+    var tl = targetOffset(eyeRestL);
+    var tr = targetOffset(eyeRestR);
+    cur.lx += (tl.x - cur.lx) * S.followEase;
+    cur.ly += (tl.y - cur.ly) * S.followEase;
+    cur.rx += (tr.x - cur.rx) * S.followEase;
+    cur.ry += (tr.y - cur.ry) * S.followEase;
+    el.eyeMoveL.setAttribute("transform", "translate(" + cur.lx + " " + cur.ly + ")");
+    el.eyeMoveR.setAttribute("transform", "translate(" + cur.rx + " " + cur.ry + ")");
+    var bx = (cur.lx + cur.rx) / 2 * S.browFollow;
+    var by = (cur.ly + cur.ry) / 2 * S.browFollow;
+    el.browL.setAttribute("transform", "translate(" + bx + " " + by + ")");
+    el.browR.setAttribute("transform", "translate(" + bx + " " + by + ")");
+    requestAnimationFrame(tick);
+  }
+
+  if (!touchOnly) {
+    document.addEventListener("mousemove", function (e) {
+      mouse = { x: e.clientX, y: e.clientY };
+    });
+  }
+
+  // --- blink: random idle loop + immediate blink on head hover (footer logic) ---
+  var idleTimer = null, hoverBlinkTimer = null;
+
+  function doBlink(done) {
+    el.eyes.classList.add("blink");
+    return setTimeout(function () {
+      el.eyes.classList.remove("blink");
+      if (done) done();
+    }, S.blinkDuration);
+  }
+
+  function scheduleIdleBlink() {
+    clearTimeout(idleTimer);
+    var gap = (S.blinkMinGap + Math.random() * (S.blinkMaxGap - S.blinkMinGap)) * 1000;
+    idleTimer = setTimeout(function () {
+      doBlink(scheduleIdleBlink);
+    }, gap);
+  }
+
+  el.headHit.addEventListener("mouseenter", function () {
+    if (hoverBlinkTimer) return; // already mid-blink, same guard as the footer
+    hoverBlinkTimer = doBlink(function () { hoverBlinkTimer = null; });
+  });
+
+  // --- controls wiring ---
+  function syncControlsFromState() {
+    Object.keys(DEFAULTS).forEach(function (key) {
+      var input = document.getElementById(key);
+      if (!input) return;
+      input.value = S[key];
+      var valSpan = document.getElementById(key + "-val");
+      if (valSpan) valSpan.textContent = S[key];
+    });
+  }
+
+  Object.keys(DEFAULTS).forEach(function (key) {
+    var input = document.getElementById(key);
+    if (!input) return;
+    input.addEventListener("input", function () {
+      S[key] = input.type === "color" ? input.value : parseFloat(input.value);
+      var valSpan = document.getElementById(key + "-val");
+      if (valSpan) valSpan.textContent = S[key];
+      render();
+    });
+  });
+
+  document.getElementById("resetBtn").addEventListener("click", function () {
+    S = Object.assign({}, DEFAULTS);
+    syncControlsFromState();
+    render();
+  });
+
+  document.getElementById("copyBtn").addEventListener("click", function () {
+    var json = JSON.stringify(S, null, 2);
+    document.getElementById("json-out").value = json;
+    if (navigator.clipboard) navigator.clipboard.writeText(json).catch(function () {});
+  });
+
+  document.querySelectorAll(".section-list a").forEach(function (a) {
+    a.addEventListener("click", function (e) { e.preventDefault(); });
+  });
+
+  window.addEventListener("resize", render);
+
+  syncControlsFromState();
+  render();
+  scheduleIdleBlink();
+  requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

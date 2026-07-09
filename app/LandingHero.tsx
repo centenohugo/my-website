@@ -1,59 +1,36 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import StickmanDoodle from "./StickmanDoodle";
-import { LEAN_TRANSITION_MS, STICKMAN_PARAMS, leanAngleForIndex } from "./stickmanConfig";
+import LandingFace from "./LandingFace";
 import { siteTypography } from "./theme";
+
+// Row layout tuned in design/prototypes/landing-face.prototype.html
+const LINK_FONT_SIZE = 38;
 
 export default function LandingHero({
   sections,
 }: {
   sections: { label: string; href: string }[];
 }) {
-  const [hoverIndex, setHoverIndex] = useState<number | null>(null);
-  const [focusIndex, setFocusIndex] = useState<number | null>(null);
-
-  const activeIndex = focusIndex ?? hoverIndex;
-  const leanDeg = activeIndex === null ? 0 : leanAngleForIndex(activeIndex, sections.length);
-
   return (
-    <div className="flex items-center justify-between gap-12">
-      <ul
-        className="flex flex-col gap-4"
-        // mouseleave lives on the whole list, not each item: moving the
-        // cursor through the gap between two labels must not pass through
-        // a "nothing hovered" state, or the figure snaps back to idle and
-        // out again between every pair of items instead of leaning
-        // smoothly from one to the next.
-        onMouseLeave={() => setHoverIndex(null)}
-      >
-        {sections.map((section, i) => (
-          <li key={section.href}>
-            <Link
-              href={section.href}
-              style={{
-                ...siteTypography.sectionLink,
-                opacity: activeIndex === i ? 1 : 0.62,
-                transition: "opacity 180ms ease",
-              }}
-              className="no-underline outline-none focus-visible:outline focus-visible:outline-1 focus-visible:outline-dashed focus-visible:outline-offset-4 focus-visible:outline-[#262019]"
-              onMouseEnter={() => setHoverIndex(i)}
-              onFocus={() => setFocusIndex(i)}
-              onBlur={() => setFocusIndex(null)}
-            >
-              {section.label}
-            </Link>
-          </li>
+    <div className="flex h-full flex-col">
+      {/* one row on desktop, stacked on small screens so the titles keep
+          their size instead of shrinking to fit side by side */}
+      <nav className="flex flex-1 flex-col items-center justify-center gap-[66px] sm:flex-row sm:gap-[132px]">
+        {sections.map((section) => (
+          <Link
+            key={section.href}
+            href={section.href}
+            style={{ ...siteTypography.sectionLink, fontSize: LINK_FONT_SIZE }}
+            className="no-underline opacity-[0.62] transition-opacity duration-[180ms] hover:opacity-100 focus-visible:opacity-100 outline-none focus-visible:outline focus-visible:outline-1 focus-visible:outline-dashed focus-visible:outline-offset-4 focus-visible:outline-[#262019]"
+          >
+            {section.label}
+          </Link>
         ))}
-      </ul>
+      </nav>
 
-      <div className="hidden sm:block shrink-0" style={{ width: 220, height: 293 }}>
-        <StickmanDoodle
-          leanDeg={leanDeg}
-          leanTransitionMs={LEAN_TRANSITION_MS}
-          params={STICKMAN_PARAMS}
-        />
+      <div className="flex justify-center">
+        <LandingFace />
       </div>
     </div>
   );

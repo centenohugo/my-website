@@ -1,23 +1,24 @@
 "use client";
 
 import { useRef } from "react";
-import { STICKMAN_PARAMS } from "./stickmanConfig";
+import { FACE_PARAMS, faceGeometry } from "./faceConfig";
 
+// Footer face: same features as the landing face (see faceGeometry), but
+// small, fully visible, and static except for a blink on hover.
+const HEAD_RADIUS = 26;
+const STROKE_WIDTH = 1;
 const PAD = 3;
 
 export default function DoodleFace() {
   const eyesRef = useRef<SVGGElement>(null);
   const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const { headRadius, eyebrowWidth, strokeWidth, figureColor, blinkDuration } = STICKMAN_PARAMS;
-  const size = headRadius * 2 + PAD * 2;
-  const cx = headRadius + PAD;
-  const cy = headRadius + PAD;
-  const eyeOffsetX = headRadius * 0.38;
-  const eyeY = cy - headRadius * 0.05;
-  const eyeR = Math.max(1.2, headRadius * 0.11);
-  const browY = eyeY - headRadius * 0.34;
-  const browHalf = eyebrowWidth / 2;
+  const g = faceGeometry(HEAD_RADIUS);
+  const size = HEAD_RADIUS * 2 + PAD * 2;
+  const cx = HEAD_RADIUS + PAD;
+  const cy = HEAD_RADIUS + PAD;
+  const eyeY = cy + g.eyeDY;
+  const browY = cy + g.browDY;
 
   const triggerBlink = () => {
     if (blinkTimer.current) return;
@@ -25,7 +26,7 @@ export default function DoodleFace() {
     blinkTimer.current = setTimeout(() => {
       eyesRef.current?.classList.remove("stickman-blink");
       blinkTimer.current = null;
-    }, blinkDuration);
+    }, FACE_PARAMS.blinkDuration);
   };
 
   return (
@@ -36,18 +37,18 @@ export default function DoodleFace() {
       aria-hidden="true"
       onMouseEnter={triggerBlink}
     >
-      <g stroke={figureColor} strokeWidth={strokeWidth} strokeLinecap="round">
-        <circle cx={cx} cy={cy} r={headRadius} fill="none" />
+      <g stroke={FACE_PARAMS.figureColor} strokeWidth={STROKE_WIDTH} strokeLinecap="round">
+        <circle cx={cx} cy={cy} r={HEAD_RADIUS} fill="none" />
         <line
-          x1={cx - eyeOffsetX - browHalf}
+          x1={cx - g.eyeOffsetX - g.browHalf}
           y1={browY}
-          x2={cx - eyeOffsetX + browHalf}
+          x2={cx - g.eyeOffsetX + g.browHalf}
           y2={browY}
         />
         <line
-          x1={cx + eyeOffsetX - browHalf}
+          x1={cx + g.eyeOffsetX - g.browHalf}
           y1={browY}
-          x2={cx + eyeOffsetX + browHalf}
+          x2={cx + g.eyeOffsetX + g.browHalf}
           y2={browY}
         />
         <g
@@ -55,8 +56,8 @@ export default function DoodleFace() {
           className="stickman-eyes"
           style={{ transformBox: "fill-box", transformOrigin: "center" } as React.CSSProperties}
         >
-          <circle cx={cx - eyeOffsetX} cy={eyeY} r={eyeR} fill={figureColor} stroke="none" />
-          <circle cx={cx + eyeOffsetX} cy={eyeY} r={eyeR} fill={figureColor} stroke="none" />
+          <circle cx={cx - g.eyeOffsetX} cy={eyeY} r={g.eyeR} fill={FACE_PARAMS.figureColor} stroke="none" />
+          <circle cx={cx + g.eyeOffsetX} cy={eyeY} r={g.eyeR} fill={FACE_PARAMS.figureColor} stroke="none" />
         </g>
       </g>
     </svg>
