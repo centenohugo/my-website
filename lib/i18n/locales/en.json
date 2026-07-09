@@ -7,14 +7,11 @@
     "blog": "Blog",
     "projects": "Projects"
   },
-  "home": {
-    "sectionsHeading": "Sections"
-  },
   "common": {
     "backLink": "← Back"
   },
   "blog": {
-    "pageTitle": "Writings",
+    "pageTitle": "Articles",
     "loadingMore": "Loading more ·"
   },
   "projects": {
