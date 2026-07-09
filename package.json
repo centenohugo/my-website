@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "dotenv -e .env.local -- tsx scripts/migrate.ts"
+    "db:migrate": "dotenv -e .env.local -- tsx scripts/migrate.ts",
+    "db:seed": "dotenv -e .env.local -- tsx scripts/seed-blog-posts.ts"
   },
   "dependencies": {
     "@vercel/blob": "^2.5.0",
