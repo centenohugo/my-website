@@ -4,7 +4,9 @@ import { useRef } from "react";
 import { FACE_PARAMS, faceGeometry } from "./faceConfig";
 
 // Footer face: same features as the landing face (see faceGeometry), but
-// small, fully visible, and static except for a blink on hover.
+// small, and static except for a blink on hover. Like the landing face it is
+// only partially shown: the svg is just tall enough for the visible slice
+// and clips the rest, so the head peeks up from the bottom of the page.
 const HEAD_RADIUS = 26;
 const STROKE_WIDTH = 1;
 const PAD = 3;
@@ -14,7 +16,8 @@ export default function DoodleFace() {
   const blinkTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const g = faceGeometry(HEAD_RADIUS);
-  const size = HEAD_RADIUS * 2 + PAD * 2;
+  const width = HEAD_RADIUS * 2 + PAD * 2;
+  const height = Math.round(HEAD_RADIUS * 2 * FACE_PARAMS.visibleFrac) + PAD;
   const cx = HEAD_RADIUS + PAD;
   const cy = HEAD_RADIUS + PAD;
   const eyeY = cy + g.eyeDY;
@@ -31,9 +34,9 @@ export default function DoodleFace() {
 
   return (
     <svg
-      viewBox={`0 0 ${size} ${size}`}
-      width={size}
-      height={size}
+      viewBox={`0 0 ${width} ${height}`}
+      width={width}
+      height={height}
       aria-hidden="true"
       onMouseEnter={triggerBlink}
     >

@@ -14,7 +14,9 @@ export default function Footer() {
   if (hidden) return null;
 
   return (
-    <footer className="flex items-center justify-center" style={{ paddingTop: 24, paddingBottom: 12 }}>
+    // no bottom padding and leading-none: the face must sit flush against the
+    // page's bottom edge so its cut-off slice reads as the head peeking up
+    <footer className="flex items-end justify-center leading-none" style={{ paddingTop: 24 }}>
       <DoodleFace />
     </footer>
   );
