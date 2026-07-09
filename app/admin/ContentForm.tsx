@@ -60,6 +60,11 @@ export default function ContentForm({
   const [esTab, setEsTab] = useState<"write" | "preview">("write");
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
+  const [translatedBy, setTranslatedBy] = useState<string | null>(null);
+  const [translationSource, setTranslationSource] = useState<
+    "local" | "openrouter" | null
+  >(null);
+  const [translationMs, setTranslationMs] = useState<number | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inlineFileInputRef = useRef<HTMLInputElement>(null);
@@ -130,6 +135,9 @@ export default function ContentForm({
   async function handleTranslate() {
     setTranslating(true);
     setTranslateError(null);
+    setTranslatedBy(null);
+    setTranslationSource(null);
+    setTranslationMs(null);
 
     const res = await fetch("/api/posts/translate", {
       method: "POST",
@@ -149,6 +157,9 @@ export default function ContentForm({
     setTitleEs(data.title_es ?? "");
     setSubtitleEs(data.subtitle_es ?? "");
     setContentEs(data.content_es ?? "");
+    setTranslatedBy(data.translated_by ?? null);
+    setTranslationSource(data.source ?? null);
+    setTranslationMs(typeof data.duration_ms === "number" ? data.duration_ms : null);
   }
 
   async function handleSubmit(event: React.FormEvent) {
@@ -403,6 +414,19 @@ export default function ContentForm({
             {translateError && (
               <span style={{ ...adminTypography.label, color: "#a24b3f" }}>
                 {translateError}
+              </span>
+            )}
+            {translatedBy && (
+              <span
+                style={{
+                  ...adminTypography.label,
+                  color: translationSource === "local" ? "#3f7a4b" : "#a2803f",
+                }}
+              >
+                {translationSource === "local" ? "✓" : "⚠"} Traducido por:{" "}
+                {translatedBy}
+                {translationMs !== null &&
+                  ` · ${(translationMs / 1000).toFixed(1)}s`}
               </span>
             )}
           </div>
