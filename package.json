@@ -11,7 +11,9 @@
     "db:seed": "dotenv -e .env.local -- tsx scripts/seed-blog-posts.ts"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "@vercel/blob": "^2.5.0",
+    "@vercel/speed-insights": "^2.0.0",
     "next": "16.2.4",
     "postgres": "^3.4.9",
     "react": "19.2.4",
