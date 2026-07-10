@@ -36,7 +36,7 @@ export default function ContentForm({
 }) {
   const router = useRouter();
   const apiBase = kind === "post" ? "/api/posts" : "/api/projects";
-  const listHref = kind === "post" ? "/admin" : "/admin/projects";
+  const listHref = kind === "post" ? "/admin" : "/admin?tab=projects";
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [subtitle, setSubtitle] = useState(initialData?.subtitle ?? "");
