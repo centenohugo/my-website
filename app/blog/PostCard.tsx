@@ -29,7 +29,9 @@ export default function PostCard({ post }: { post: Post }) {
         className="relative aspect-[3/2] w-full overflow-hidden"
         style={{
           borderRadius: blogLayout.thumbnailRadius,
-          backgroundColor: blogLayout.thumbnailColor,
+          backgroundColor: post.image_url
+            ? "var(--background)"
+            : blogLayout.thumbnailColor,
           backgroundImage: post.image_url
             ? `url(${post.image_url})`
             : blogLayout.thumbnailPattern,
