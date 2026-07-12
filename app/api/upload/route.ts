@@ -22,14 +22,37 @@ export async function POST(request: Request) {
   }
 
   const inputBuffer = Buffer.from(await file.arrayBuffer())
-  const webpBuffer = await sharp(inputBuffer).webp({ quality: 80 }).toBuffer()
+
+  let webpBuffer: Buffer
+  try {
+    webpBuffer = await sharp(inputBuffer).webp({ quality: 80 }).toBuffer()
+  } catch (err) {
+    console.error('upload: sharp conversion failed', err)
+    return NextResponse.json(
+      { error: 'Unsupported or corrupted image' },
+      { status: 400 }
+    )
+  }
+
   const webpName = file.name.replace(/\.[^.]+$/, '') + '.webp'
 
-  const blob = await put(webpName, webpBuffer, {
-    access: 'public',
-    addRandomSuffix: true,
-    contentType: 'image/webp',
-  })
+  // On Vercel's runtime sharp can return memory backed by a SharedArrayBuffer,
+  // which the fetch() inside put() rejects ("SharedArrayBuffer is not
+  // allowed"). Copy into a fresh, non-shared buffer before uploading.
+  const body = Buffer.from(webpBuffer)
 
-  return NextResponse.json({ url: blob.url })
+  try {
+    const blob = await put(webpName, body, {
+      access: 'public',
+      addRandomSuffix: true,
+      contentType: 'image/webp',
+    })
+    return NextResponse.json({ url: blob.url })
+  } catch (err) {
+    console.error('upload: blob put failed', err)
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : 'Blob upload failed' },
+      { status: 500 }
+    )
+  }
 }
