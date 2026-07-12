@@ -25,6 +25,42 @@ export type ContentFormInitialData = {
 
 const EDITOR_HEIGHT = "720px";
 
+// Vercel serverless functions reject request bodies over ~4.5 MB, so we
+// downscale + re-encode to WebP in the browser before sending the upload.
+// The server still runs sharp on the result as a second pass.
+const MAX_DIMENSION = 2000;
+const WEBP_QUALITY = 0.82;
+
+async function compressImage(file: File): Promise<File> {
+  if (!file.type.startsWith("image/")) return file;
+  try {
+    const bitmap = await createImageBitmap(file, { imageOrientation: "from-image" });
+    const scale = Math.min(1, MAX_DIMENSION / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+    bitmap.close?.();
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/webp", WEBP_QUALITY)
+    );
+    if (!blob) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".webp";
+    return new File([blob], name, { type: "image/webp" });
+  } catch {
+    // If anything goes wrong (unsupported format, etc.) fall back to the
+    // original file and let the server decide.
+    return file;
+  }
+}
+
 export default function ContentForm({
   kind,
   mode,
@@ -70,11 +106,15 @@ export default function ContentForm({
   const inlineFileInputRef = useRef<HTMLInputElement>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
 
-  async function uploadImage(file: File) {
+  async function uploadImage(file: File): Promise<string> {
+    const compressed = await compressImage(file);
     const formData = new FormData();
-    formData.append("file", file);
+    formData.append("file", compressed);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
-    if (!res.ok) return null;
+    if (!res.ok) {
+      const data = await res.json().catch(() => null);
+      throw new Error(data?.error ?? `Upload failed (${res.status})`);
+    }
     const data = await res.json();
     return data.url as string;
   }
@@ -84,14 +124,15 @@ export default function ContentForm({
     if (!file) return;
 
     setHeroUploading(true);
-    const url = await uploadImage(file);
-    setHeroUploading(false);
-
-    if (!url) {
-      setError("Couldn't upload the image");
-      return;
+    setError(null);
+    try {
+      const url = await uploadImage(file);
+      setImageUrl(url);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't upload the image");
+    } finally {
+      setHeroUploading(false);
     }
-    setImageUrl(url);
   }
 
   function insertAtCursor(text: string) {
@@ -119,12 +160,15 @@ export default function ContentForm({
     if (!file) return;
 
     setInlineUploading(true);
-    const url = await uploadImage(file);
-    setInlineUploading(false);
-
-    if (!url) {
-      setError("Couldn't upload the image");
+    setError(null);
+    let url: string;
+    try {
+      url = await uploadImage(file);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Couldn't upload the image");
       return;
+    } finally {
+      setInlineUploading(false);
     }
 
     const caption = window.prompt("Caption (leave empty for none):", "");
