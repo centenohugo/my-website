@@ -19,7 +19,7 @@ export default async function ProjectsPage() {
 
   return (
     <main
-      className="mx-auto max-w-6xl pb-16"
+      className="mx-auto w-full max-w-6xl pb-16"
       style={{
         paddingLeft: projectLayout.sidePadding,
         paddingRight: projectLayout.sidePadding,

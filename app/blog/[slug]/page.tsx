@@ -72,7 +72,7 @@ export default async function PostPage({
       </div>
 
       <div
-        className="mx-auto max-w-3xl"
+        className="mx-auto w-full max-w-3xl"
         style={{ paddingLeft: blogLayout.sidePadding, paddingRight: blogLayout.sidePadding }}
       >
         <hr className="my-8" style={{ borderColor: blogColors.dateMono }} />

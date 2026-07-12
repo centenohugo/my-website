@@ -19,7 +19,7 @@ export default async function BlogPage() {
 
   return (
     <main
-      className="mx-auto max-w-6xl pb-16"
+      className="mx-auto w-full max-w-6xl pb-16"
       style={{
         paddingLeft: blogLayout.sidePadding,
         paddingRight: blogLayout.sidePadding,

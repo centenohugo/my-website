@@ -101,7 +101,7 @@ export default async function ProjectPage({
       </div>
 
       <div
-        className="mx-auto max-w-3xl"
+        className="mx-auto w-full max-w-3xl"
         style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
       >
         <hr className="my-8" style={{ borderColor: projectColors.dateMono }} />

@@ -4,7 +4,7 @@ import ContentForm from "../../ContentForm";
 export default function NewProjectPage() {
   return (
     <main
-      className="mx-auto max-w-3xl pb-16"
+      className="mx-auto w-full max-w-3xl pb-16"
       style={{
         paddingLeft: siteLayout.sidePadding,
         paddingRight: siteLayout.sidePadding,
