@@ -5,7 +5,8 @@
   },
   "nav": {
     "blog": "Blog",
-    "projects": "Projects"
+    "projects": "Projects",
+    "about": "About"
   },
   "common": {
     "backLink": "← Back"
@@ -13,6 +14,12 @@
   "blog": {
     "pageTitle": "Blog",
     "loadingMore": "Loading more ·"
+  },
+  "about": {
+    "name": "Hugo Centeno Sanz",
+    "bio": "Hi, I'm Hugo. I'm an engineering student who likes to learn by doing. Love going for a hike, spinning some records and rewatching The Office sketches. Currently trying out crossfit!",
+    "photoAlt": "This is me!",
+    "flipLabel": "Flip to see a photo of me"
   },
   "projects": {
     "pageTitle": "Projects",
