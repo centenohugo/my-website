@@ -111,7 +111,7 @@ export default function DoodleFace() {
     >
       <g stroke={stroke} strokeWidth={STROKE_WIDTH} strokeLinecap="round">
         <circle cx={cx} cy={cy} r={HEAD_RADIUS} fill="none" />
-        <g ref={browsRef}>
+        <g ref={browsRef} strokeWidth={STROKE_WIDTH * FACE_PARAMS.browStrokeScale}>
           <line
             x1={cx - g.eyeOffsetX - g.browHalf}
             y1={browY}

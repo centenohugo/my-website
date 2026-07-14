@@ -1,5 +1,4 @@
-// Tuned in design/prototypes/landing-face.prototype.html — see that file
-// (and delete it once no further tweaking is needed).
+//See design/prototypes/landing-face.prototype.html vor visual reference for these parameters. 
 
 export const FACE_PARAMS = {
   headRadius: 115,
@@ -8,6 +7,7 @@ export const FACE_PARAMS = {
   eyeScale: 0.11, // eye dot radius, as a fraction of head radius
   eyeOffsetScale: 0.37, // eye distance from head center, as a fraction of head radius
   browScale: 0.5, // eyebrow width, as a fraction of head radius
+  browStrokeScale: 1.6, // eyebrow stroke thickness, as a multiple of the base stroke width
   travelScale: 0.08, // max eye excursion toward the cursor, as a fraction of head radius
   followEase: 0.16, // per-frame lerp factor: higher = snappier
   browFollow: 0.3, // brows drift with the eyes at this multiplier (0 = static)

@@ -154,7 +154,7 @@ export default function LandingFace() {
     >
       <g stroke={stroke} strokeWidth={FACE_PARAMS.strokeWidth} strokeLinecap="round" fill="none">
         <circle cx={cx} cy={cy} r={R} />
-        <g ref={browsRef}>
+        <g ref={browsRef} strokeWidth={FACE_PARAMS.strokeWidth * FACE_PARAMS.browStrokeScale}>
           <line x1={cx - g.eyeOffsetX - g.browHalf} y1={browY} x2={cx - g.eyeOffsetX + g.browHalf} y2={browY} />
           <line x1={cx + g.eyeOffsetX - g.browHalf} y1={browY} x2={cx + g.eyeOffsetX + g.browHalf} y2={browY} />
         </g>

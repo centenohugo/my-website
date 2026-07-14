@@ -3,6 +3,8 @@
   <g transform="translate(10 10)">
     <g stroke="#262019" stroke-width="8" stroke-linecap="round" fill="none">
       <circle cx="120" cy="120" r="115"/>
+    </g>
+    <g stroke="#262019" stroke-width="12.8" stroke-linecap="round" fill="none">
       <line x1="48.7" y1="75.15" x2="106.2" y2="75.15"/>
       <line x1="133.8" y1="75.15" x2="191.3" y2="75.15"/>
     </g>
