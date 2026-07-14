@@ -6,14 +6,7 @@ import LogoutButton from "./LogoutButton";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ tab?: string }>;
-}) {
-  const { tab } = await searchParams;
-  const initialTab = tab === "projects" ? "projects" : "posts";
-
+export default async function AdminPage() {
   const [posts, projects] = await Promise.all([
     sql<AdminListItem[]>`
       select slug, title, status
@@ -41,7 +34,7 @@ export default async function AdminPage({
         <LogoutButton />
       </header>
 
-      <AdminTabs initialTab={initialTab} posts={posts} projects={projects} />
+      <AdminTabs posts={posts} projects={projects} />
     </main>
   );
 }
