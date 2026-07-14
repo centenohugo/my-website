@@ -1,7 +1,9 @@
 import { put } from '@vercel/blob'
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
+import { assetFolder, isAssetId, isBlobKind } from '@/lib/blob'
 import { hasValidSession } from '@/lib/require-session'
+import { slugify } from '@/lib/slug'
 
 export const runtime = 'nodejs'
 
@@ -12,9 +14,26 @@ export async function POST(request: Request) {
 
   const form = await request.formData()
   const file = form.get('file')
+  const kind = form.get('kind')
+  const assetId = form.get('assetId')
 
   if (!(file instanceof File)) {
     return NextResponse.json({ error: 'file is required' }, { status: 400 })
+  }
+
+  // The folder path is built server-side from an allowlisted kind and a UUID
+  // so the client can never write outside posts/<uuid>/ or projects/<uuid>/.
+  if (!isBlobKind(kind)) {
+    return NextResponse.json(
+      { error: 'kind must be "post" or "project"' },
+      { status: 400 }
+    )
+  }
+  if (!isAssetId(assetId)) {
+    return NextResponse.json(
+      { error: 'assetId must be a UUID' },
+      { status: 400 }
+    )
   }
 
   if (!file.type.startsWith('image/')) {
@@ -34,7 +53,8 @@ export async function POST(request: Request) {
     )
   }
 
-  const webpName = file.name.replace(/\.[^.]+$/, '') + '.webp'
+  const baseName = slugify(file.name.replace(/\.[^.]+$/, '')) || 'image'
+  const pathname = assetFolder(kind, assetId) + baseName + '.webp'
 
   // On Vercel's runtime sharp can return memory backed by a SharedArrayBuffer,
   // which the fetch() inside put() rejects ("SharedArrayBuffer is not
@@ -42,7 +62,7 @@ export async function POST(request: Request) {
   const body = Buffer.from(webpBuffer)
 
   try {
-    const blob = await put(webpName, body, {
+    const blob = await put(pathname, body, {
       access: 'public',
       addRandomSuffix: true,
       contentType: 'image/webp',

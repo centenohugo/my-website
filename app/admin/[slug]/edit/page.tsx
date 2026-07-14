@@ -11,7 +11,7 @@ export default async function EditPostPage({
   const { slug } = await params;
 
   const [post] = await sql<ContentFormInitialData[]>`
-    select slug, title, subtitle, content, status, image_url, title_es, subtitle_es, content_es
+    select slug, title, subtitle, content, status, image_url, title_es, subtitle_es, content_es, asset_prefix
     from posts
     where slug = ${slug}
   `;

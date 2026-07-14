@@ -21,6 +21,7 @@ export type ContentFormInitialData = {
   title_es?: string | null;
   subtitle_es?: string | null;
   content_es?: string | null;
+  asset_prefix?: string | null;
 };
 
 const EDITOR_HEIGHT = "720px";
@@ -90,6 +91,13 @@ export default function ContentForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // Immutable id for this article's blob folder (posts/<id>/ or
+  // projects/<id>/). Generated once per new article; articles created before
+  // the folder scheme get one on their first edit that uploads an image.
+  const [assetPrefix] = useState(
+    () => initialData?.asset_prefix ?? crypto.randomUUID()
+  );
+
   const [titleEs, setTitleEs] = useState(initialData?.title_es ?? "");
   const [subtitleEs, setSubtitleEs] = useState(initialData?.subtitle_es ?? "");
   const [contentEs, setContentEs] = useState(initialData?.content_es ?? "");
@@ -110,6 +118,8 @@ export default function ContentForm({
     const compressed = await compressImage(file);
     const formData = new FormData();
     formData.append("file", compressed);
+    formData.append("kind", kind);
+    formData.append("assetId", assetPrefix);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     if (!res.ok) {
       const data = await res.json().catch(() => null);
@@ -217,6 +227,7 @@ export default function ContentForm({
       content,
       status,
       image_url: imageUrl || null,
+      asset_prefix: assetPrefix,
       ...(kind === "project"
         ? { repo_url: repoUrl || null, live_url: liveUrl || null, stage }
         : {

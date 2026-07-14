@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
 import { hasValidSession } from '@/lib/require-session'
 import { slugify } from '@/lib/slug'
@@ -43,6 +44,7 @@ export async function POST(request: Request) {
     image_url = null,
     repo_url = null,
     live_url = null,
+    asset_prefix = null,
   } = body
 
   if (!title || !content) {
@@ -57,9 +59,9 @@ export async function POST(request: Request) {
 
   try {
     const [project] = await sql`
-      insert into projects (title, subtitle, slug, content, status, stage, published_at, image_url, repo_url, live_url)
-      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${stage}, ${publishedAt}, ${image_url}, ${repo_url}, ${live_url})
-      returning id, title, subtitle, slug, status, stage, created_at, updated_at, published_at, image_url, repo_url, live_url
+      insert into projects (title, subtitle, slug, content, status, stage, published_at, image_url, repo_url, live_url, asset_prefix)
+      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${stage}, ${publishedAt}, ${image_url}, ${repo_url}, ${live_url}, ${isAssetId(asset_prefix) ? asset_prefix : null})
+      returning id, title, subtitle, slug, status, stage, created_at, updated_at, published_at, image_url, repo_url, live_url, asset_prefix
     `
     return NextResponse.json(project, { status: 201 })
   } catch (error) {

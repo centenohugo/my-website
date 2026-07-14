@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
 import { hasValidSession } from '@/lib/require-session'
 import { slugify } from '@/lib/slug'
@@ -40,6 +41,7 @@ export async function POST(request: Request) {
     title_es = null,
     subtitle_es = null,
     content_es = null,
+    asset_prefix = null,
   } = body
 
   if (!title || !content) {
@@ -54,9 +56,9 @@ export async function POST(request: Request) {
 
   try {
     const [post] = await sql`
-      insert into posts (title, subtitle, slug, content, status, published_at, image_url, title_es, subtitle_es, content_es)
-      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url}, ${title_es}, ${subtitle_es}, ${content_es})
-      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es
+      insert into posts (title, subtitle, slug, content, status, published_at, image_url, title_es, subtitle_es, content_es, asset_prefix)
+      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url}, ${title_es}, ${subtitle_es}, ${content_es}, ${isAssetId(asset_prefix) ? asset_prefix : null})
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es, asset_prefix
     `
     return NextResponse.json(post, { status: 201 })
   } catch (error) {
