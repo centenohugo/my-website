@@ -44,7 +44,9 @@ export default async function ProjectPage({
             className="relative aspect-[3/2] w-full overflow-hidden md:aspect-auto md:h-[85vh]"
             style={{
               borderRadius: projectLayout.thumbnailRadius,
-              backgroundColor: projectLayout.thumbnailColor,
+              backgroundColor: project.image_url
+                ? "var(--background)"
+                : projectLayout.thumbnailColor,
               backgroundImage: project.image_url
                 ? `url(${project.image_url})`
                 : projectLayout.thumbnailPattern,
