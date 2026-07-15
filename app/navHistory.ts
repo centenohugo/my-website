@@ -3,12 +3,14 @@ const BACK_ELIGIBLE_PREFIX = `${NAV_PREFIX}canGoBack:`;
 
 export function parentPath(pathname: string): string | null {
   if (pathname === "/") return null;
+  // Admin editor pages (/admin/new, /admin/[slug]/edit, /admin/projects/new,
+  // /admin/projects/[slug]/edit) all belong to the /admin list — there is no
+  // /admin/projects page; projects live in a tab of /admin.
+  if (pathname.startsWith("/admin/")) {
+    return pathname.startsWith("/admin/projects/") ? "/admin?tab=projects" : "/admin";
+  }
   const segments = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
-  // "/edit" routes live one level deeper than the list they belong to
-  // (e.g. /admin/[slug]/edit has no /admin/[slug] page — /admin is the list),
-  // so they need to climb two segments instead of one.
-  const levels = segments[segments.length - 1] === "edit" ? 2 : 1;
-  const parentSegments = segments.slice(0, -levels);
+  const parentSegments = segments.slice(0, -1);
   return parentSegments.length === 0 ? "/" : `/${parentSegments.join("/")}`;
 }
 

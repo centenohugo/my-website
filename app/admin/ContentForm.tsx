@@ -253,7 +253,9 @@ export default function ContentForm({
       return;
     }
 
-    router.push(listHref);
+    // Replace the edit/new entry: the slug may have changed on save, so going
+    // back to the old edit URL would 404.
+    router.replace(listHref);
     router.refresh();
   }
 

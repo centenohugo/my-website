@@ -25,7 +25,8 @@ export default function DeleteContentButton({
     await fetch(`${apiBase}/${slug}`, { method: "DELETE" });
 
     if (redirectTo) {
-      router.push(redirectTo);
+      // Replace so the back button doesn't return to the deleted entry's page.
+      router.replace(redirectTo);
     }
     router.refresh();
   }

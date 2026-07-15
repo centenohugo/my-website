@@ -8,7 +8,8 @@ export default function LogoutButton() {
 
   async function handleLogout() {
     await fetch("/api/logout", { method: "POST" });
-    router.push("/login");
+    // Replace so the back button doesn't return to admin pages after logout.
+    router.replace("/login");
     router.refresh();
   }
 

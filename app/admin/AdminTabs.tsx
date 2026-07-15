@@ -1,27 +1,30 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
 import AdminList, { type AdminListItem } from "./AdminList";
 import { adminTypography } from "./theme";
 
 type Tab = "posts" | "projects";
 
 export default function AdminTabs({
-  initialTab,
   posts,
   projects,
 }: {
-  initialTab: Tab;
   posts: AdminListItem[];
   projects: AdminListItem[];
 }) {
-  const [tab, setTab] = useState<Tab>(initialTab);
+  // The URL is the source of truth for the active tab, so back/forward and
+  // history restores always render the tab the URL says.
+  const searchParams = useSearchParams();
+  const tab: Tab = searchParams.get("tab") === "projects" ? "projects" : "posts";
 
   function switchTab(next: Tab) {
-    setTab(next);
-    // Keep the tab in the URL (refresh/back/bookmark) without a server round-trip.
-    window.history.replaceState(null, "", next === "projects" ? "/admin?tab=projects" : "/admin");
+    if (next === tab) return;
+    // pushState integrates with the Next.js router (updates useSearchParams
+    // without a server round-trip) and makes each tab switch a history entry,
+    // so the back button returns to the previous tab.
+    window.history.pushState(null, "", next === "projects" ? "/admin?tab=projects" : "/admin");
   }
 
   return (

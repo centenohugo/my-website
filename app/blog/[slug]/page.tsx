@@ -47,7 +47,9 @@ export default async function PostPage({
             className="relative aspect-[3/2] w-full overflow-hidden md:aspect-auto md:h-[85vh]"
             style={{
               borderRadius: blogLayout.thumbnailRadius,
-              backgroundColor: blogLayout.thumbnailColor,
+              backgroundColor: post.image_url
+                ? "var(--background)"
+                : blogLayout.thumbnailColor,
               backgroundImage: post.image_url
                 ? `url(${post.image_url})`
                 : blogLayout.thumbnailPattern,

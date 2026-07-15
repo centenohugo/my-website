@@ -26,9 +26,12 @@ export default function InternalNavTracker() {
       previousPathname.current = pathname;
       return;
     }
+    // parentPath may carry a query (/admin?tab=projects); previousPathname
+    // never does, so compare pathnames only.
+    const parent = parentPath(pathname)?.split("?")[0] ?? null;
     sessionStorage.setItem(
       backEligibleKey(pathname),
-      previousPathname.current === parentPath(pathname) ? "1" : "0"
+      previousPathname.current === parent ? "1" : "0"
     );
     previousPathname.current = pathname;
   }, [pathname]);

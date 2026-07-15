@@ -27,7 +27,8 @@ export default function LoginForm() {
       return;
     }
 
-    router.push("/admin");
+    // Replace so the back button doesn't return to the login form.
+    router.replace("/admin");
     router.refresh();
   }
 
