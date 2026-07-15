@@ -9,7 +9,6 @@ const SOCIALS = [
   { name: "GitHub", href: "https://github.com/centenohugo", icon: GitHubIcon },
   { name: "LinkedIn", href: "https://www.linkedin.com/in/hugocentenosanz/", icon: LinkedInIcon },
   { name: "Email", href: "mailto:hcienteno@gmail.com", icon: EmailIcon },
-  { name: "X", href: "https://x.com/hcentenosanz", icon: XIcon },
 ] as const;
 
 /**
@@ -83,17 +82,6 @@ function LinkedInIcon() {
     </IconSvg>
   );
 }
-
-// two sketchy crossing strokes
-function XIcon() {
-  return (
-    <IconSvg>
-      <path d="M8.6 8.1 C11.6 11.6 19.9 20.2 23.4 23.9" />
-      <path d="M23.2 8.4 C19.5 11.9 12.1 19.9 8.8 23.6" />
-    </IconSvg>
-  );
-}
-
 // an envelope
 function EmailIcon() {
   return (
