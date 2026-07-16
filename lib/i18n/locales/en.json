@@ -10,6 +10,7 @@
   },
   "common": {
     "backLink": "← Back",
+    "draftBadge": "Draft",
     "notFoundHome": "← Home"
   },
   "blog": {

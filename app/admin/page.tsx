@@ -9,12 +9,12 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   const [posts, projects] = await Promise.all([
     sql<AdminListItem[]>`
-      select slug, title, status
+      select slug, title, status, share_token
       from posts
       order by created_at desc
     `,
     sql<AdminListItem[]>`
-      select slug, title, status
+      select slug, title, status, share_token
       from projects
       order by created_at desc
     `,
