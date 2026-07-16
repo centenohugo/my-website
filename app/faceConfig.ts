@@ -30,5 +30,9 @@ export function faceGeometry(headRadius: number) {
     eyeDY,
     browDY: eyeDY - headRadius * 0.34,
     browHalf: (headRadius * FACE_PARAMS.browScale) / 2,
+    // straight mouth (404 face): only visible when the face is rendered with
+    // a visibleFrac large enough to uncover it (> ~0.71)
+    mouthDY: headRadius * 0.42,
+    mouthHalf: headRadius * 0.26,
   };
 }

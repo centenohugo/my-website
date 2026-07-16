@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
+import { hasAdminSession, toShareToken } from "@/lib/share";
 import MarkdownContent from "../../MarkdownContent";
 import { projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
 
@@ -15,21 +17,37 @@ type ProjectDetail = {
   stage: ProjectStage;
   repo_url: string | null;
   live_url: string | null;
+  status: "draft" | "published";
 };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  // Share links point at unpublished drafts; keep them out of search indexes.
+  const { share } = await searchParams;
+  return share ? { robots: { index: false, follow: false } } : {};
+}
 
 export default async function ProjectPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
   const t = getDictionary(locale);
+  const shareToken = toShareToken((await searchParams).share);
+  const isAdmin = await hasAdminSession();
 
   const [project] = await sql<ProjectDetail[]>`
-    select title, subtitle, content, published_at, image_url, stage, repo_url, live_url
+    select title, subtitle, content, published_at, image_url, stage, repo_url, live_url, status
     from projects
-    where slug = ${slug} and status = 'published'
+    where slug = ${slug}
+      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
   `;
 
   if (!project) {
@@ -62,7 +80,9 @@ export default async function ProjectPage({
         >
           <div className="flex items-center gap-2">
             <span className="uppercase" style={projectTypography.postDate}>
-              {formatFullDate(project.published_at, locale)}
+              {project.status === "published"
+                ? formatFullDate(project.published_at, locale)
+                : t.common.draftBadge}
             </span>
             <span className="uppercase" style={projectTypography.stageBadge}>
               {t.projects.stages[project.stage]}

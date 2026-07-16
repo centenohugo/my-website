@@ -65,10 +65,17 @@ export default function AdminTabs({
           items={projects}
           apiBase="/api/projects"
           editHrefBase="/admin/projects"
+          publicHrefBase="/projects"
           emptyLabel="No projects yet."
         />
       ) : (
-        <AdminList items={posts} apiBase="/api/posts" editHrefBase="/admin" emptyLabel="No posts yet." />
+        <AdminList
+          items={posts}
+          apiBase="/api/posts"
+          editHrefBase="/admin"
+          publicHrefBase="/blog"
+          emptyLabel="No posts yet."
+        />
       )}
     </>
   );

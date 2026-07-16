@@ -1,8 +1,10 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
-import { LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
+import { hasAdminSession, toShareToken } from "@/lib/share";
 import MarkdownContent from "../../MarkdownContent";
 import { blogColors, blogLayout, blogTypography } from "../theme";
 
@@ -15,20 +17,37 @@ type PostDetail = {
   content_es: string | null;
   published_at: string | null;
   image_url: string | null;
+  status: "draft" | "published";
 };
+
+export async function generateMetadata({
+  searchParams,
+}: {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}): Promise<Metadata> {
+  // Share links point at unpublished drafts; keep them out of search indexes.
+  const { share } = await searchParams;
+  return share ? { robots: { index: false, follow: false } } : {};
+}
 
 export default async function PostPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ slug: string }>;
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   const { slug } = await params;
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
+  const shareToken = toShareToken((await searchParams).share);
+  const isAdmin = await hasAdminSession();
 
   const [post] = await sql<PostDetail[]>`
-    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url
+    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url, status
     from posts
-    where slug = ${slug} and status = 'published'
+    where slug = ${slug}
+      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
   `;
 
   if (!post) {
@@ -64,7 +83,9 @@ export default async function PostPage({
           style={{ paddingLeft: blogLayout.sidePadding, paddingRight: blogLayout.sidePadding }}
         >
           <span className="uppercase" style={blogTypography.postDate}>
-            {formatFullDate(post.published_at, locale)}
+            {post.status === "published"
+              ? formatFullDate(post.published_at, locale)
+              : t.common.draftBadge}
           </span>
           <h1 style={{ ...blogTypography.postTitle, textWrap: "pretty" }}>{title}</h1>
           {subtitle && (

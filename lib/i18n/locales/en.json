@@ -9,7 +9,9 @@
     "about": "About"
   },
   "common": {
-    "backLink": "← Back"
+    "backLink": "← Back",
+    "draftBadge": "Draft",
+    "notFoundHome": "← Home"
   },
   "blog": {
     "pageTitle": "Blog",

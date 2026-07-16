@@ -9,7 +9,9 @@
     "about": "Sobre mí"
   },
   "common": {
-    "backLink": "← Volver"
+    "backLink": "← Volver",
+    "draftBadge": "Borrador",
+    "notFoundHome": "← Inicio"
   },
   "blog": {
     "pageTitle": "Blog",

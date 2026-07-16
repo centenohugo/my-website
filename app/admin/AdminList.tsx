@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CopyLinkButton from "./CopyLinkButton";
 import DeleteContentButton from "./DeleteContentButton";
 import { adminColors, adminTypography } from "./theme";
 
@@ -6,17 +7,20 @@ export type AdminListItem = {
   slug: string;
   title: string;
   status: "draft" | "published";
+  share_token: string;
 };
 
 export default function AdminList({
   items,
   apiBase,
   editHrefBase,
+  publicHrefBase,
   emptyLabel,
 }: {
   items: AdminListItem[];
   apiBase: string;
   editHrefBase: string;
+  publicHrefBase: string;
   emptyLabel: string;
 }) {
   return (
@@ -35,6 +39,12 @@ export default function AdminList({
           </div>
 
           <div className="flex items-center gap-3">
+            <CopyLinkButton
+              publicHrefBase={publicHrefBase}
+              slug={item.slug}
+              shareToken={item.share_token}
+              status={item.status}
+            />
             <Link
               href={`${editHrefBase}/${item.slug}/edit`}
               className="uppercase"

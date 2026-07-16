@@ -11,8 +11,18 @@ const PAD = FACE_PARAMS.strokeWidth + 2;
  * head blinks immediately (same guard as the footer face used to have) and
  * random idle blinks keep running. On touch-only devices the eyes stay
  * centered and only the idle blink remains.
+ *
+ * `visibleFrac` overrides how much of the head peeks above the bottom edge;
+ * `mouth` adds a straight, unamused mouth line (used by the 404 page, which
+ * needs a larger visibleFrac for the mouth to be uncovered).
  */
-export default function LandingFace() {
+export default function LandingFace({
+  visibleFrac = FACE_PARAMS.visibleFrac,
+  mouth = false,
+}: {
+  visibleFrac?: number;
+  mouth?: boolean;
+} = {}) {
   // null until mounted: the server render uses the full configured radius,
   // then the first client measure clamps it so the head never outgrows a
   // small screen.
@@ -137,7 +147,7 @@ export default function LandingFace() {
   const width = R * 2 + PAD * 2;
   // the head is cut off by the bottom edge: the svg is only as tall as the
   // visible slice, and clips the rest (no overflow-visible here)
-  const height = Math.round(R * 2 * FACE_PARAMS.visibleFrac) + PAD;
+  const height = Math.round(R * 2 * visibleFrac) + PAD;
   const cx = R + PAD;
   const cy = PAD + R;
   const eyeY = cy + g.eyeDY;
@@ -158,6 +168,9 @@ export default function LandingFace() {
           <line x1={cx - g.eyeOffsetX - g.browHalf} y1={browY} x2={cx - g.eyeOffsetX + g.browHalf} y2={browY} />
           <line x1={cx + g.eyeOffsetX - g.browHalf} y1={browY} x2={cx + g.eyeOffsetX + g.browHalf} y2={browY} />
         </g>
+        {mouth && (
+          <line x1={cx - g.mouthHalf} y1={cy + g.mouthDY} x2={cx + g.mouthHalf} y2={cy + g.mouthDY} />
+        )}
       </g>
       {/* blink squashes each dot on its own center; the cursor-follow
           translate lives on the parent group, so the two never fight */}
