@@ -9,7 +9,8 @@
     "about": "Sobre mí"
   },
   "common": {
-    "backLink": "← Volver"
+    "backLink": "← Volver",
+    "notFoundHome": "← Inicio"
   },
   "blog": {
     "pageTitle": "Blog",

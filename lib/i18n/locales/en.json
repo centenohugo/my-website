@@ -9,7 +9,8 @@
     "about": "About"
   },
   "common": {
-    "backLink": "← Back"
+    "backLink": "← Back",
+    "notFoundHome": "← Home"
   },
   "blog": {
     "pageTitle": "Blog",
