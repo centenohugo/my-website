@@ -104,10 +104,7 @@ export default function ContentForm({
   const [esTab, setEsTab] = useState<"write" | "preview">("write");
   const [translating, setTranslating] = useState(false);
   const [translateError, setTranslateError] = useState<string | null>(null);
-  const [translatedBy, setTranslatedBy] = useState<string | null>(null);
-  const [translationSource, setTranslationSource] = useState<
-    "local" | "openrouter" | null
-  >(null);
+  const [translationModel, setTranslationModel] = useState<string | null>(null);
   const [translationMs, setTranslationMs] = useState<number | null>(null);
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -189,11 +186,10 @@ export default function ContentForm({
   async function handleTranslate() {
     setTranslating(true);
     setTranslateError(null);
-    setTranslatedBy(null);
-    setTranslationSource(null);
+    setTranslationModel(null);
     setTranslationMs(null);
 
-    const res = await fetch("/api/posts/translate", {
+    const res = await fetch("/api/translate", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ title, subtitle: subtitle || null, content }),
@@ -211,8 +207,7 @@ export default function ContentForm({
     setTitleEs(data.title_es ?? "");
     setSubtitleEs(data.subtitle_es ?? "");
     setContentEs(data.content_es ?? "");
-    setTranslatedBy(data.translated_by ?? null);
-    setTranslationSource(data.source ?? null);
+    setTranslationModel(data.model ?? null);
     setTranslationMs(typeof data.duration_ms === "number" ? data.duration_ms : null);
   }
 
@@ -228,13 +223,12 @@ export default function ContentForm({
       status,
       image_url: imageUrl || null,
       asset_prefix: assetPrefix,
+      title_es: titleEs || null,
+      subtitle_es: subtitleEs || null,
+      content_es: contentEs || null,
       ...(kind === "project"
         ? { repo_url: repoUrl || null, live_url: liveUrl || null, stage }
-        : {
-            title_es: titleEs || null,
-            subtitle_es: subtitleEs || null,
-            content_es: contentEs || null,
-          }),
+        : {}),
     };
 
     const res = await fetch(
@@ -453,106 +447,98 @@ export default function ContentForm({
         </div>
       </div>
 
-      {kind === "post" && (
-        <div
-          className="flex flex-col gap-4"
-          style={{ width: "1200px", maxWidth: "calc(100vw - 88px)" }}
-        >
-          <div className="flex items-center gap-3">
+      <div
+        className="flex flex-col gap-4"
+        style={{ width: "1200px", maxWidth: "calc(100vw - 88px)" }}
+      >
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={handleTranslate}
+            disabled={translating || !title || !content}
+            className="w-fit uppercase"
+            style={adminTypography.buttonPrimary}
+          >
+            {translating ? "Translating…" : "Generate Spanish translation"}
+          </button>
+          {translateError && (
+            <span style={{ ...adminTypography.label, color: "#a24b3f" }}>
+              {translateError}
+            </span>
+          )}
+          {translationModel && (
+            <span style={adminTypography.label}>
+              Translated by {translationModel}
+              {translationMs !== null &&
+                ` · ${(translationMs / 1000).toFixed(1)}s`}
+            </span>
+          )}
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="uppercase" style={adminTypography.label}>
+            Title (ES)
+          </span>
+          <input
+            type="text"
+            value={titleEs}
+            onChange={(event) => setTitleEs(event.target.value)}
+            style={adminTypography.input}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <span className="uppercase" style={adminTypography.label}>
+            Subtitle (ES)
+          </span>
+          <input
+            type="text"
+            value={subtitleEs}
+            onChange={(event) => setSubtitleEs(event.target.value)}
+            style={adminTypography.input}
+          />
+        </div>
+
+        <div className="flex flex-col gap-1.5">
+          <div className="flex items-center gap-4">
             <button
               type="button"
-              onClick={handleTranslate}
-              disabled={translating || !title || !content}
-              className="w-fit uppercase"
-              style={adminTypography.buttonPrimary}
+              onClick={() => setEsTab("write")}
+              className="uppercase"
+              style={esTab === "write" ? adminTypography.tabActive : adminTypography.tab}
             >
-              {translating ? "Translating…" : "Generate Spanish translation"}
+              Write
             </button>
-            {translateError && (
-              <span style={{ ...adminTypography.label, color: "#a24b3f" }}>
-                {translateError}
-              </span>
-            )}
-            {translatedBy && (
-              <span
-                style={{
-                  ...adminTypography.label,
-                  color: translationSource === "local" ? "#3f7a4b" : "#a2803f",
-                }}
-              >
-                {translationSource === "local" ? "✓" : "⚠"} Traducido por:{" "}
-                {translatedBy}
-                {translationMs !== null &&
-                  ` · ${(translationMs / 1000).toFixed(1)}s`}
-              </span>
-            )}
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="uppercase" style={adminTypography.label}>
-              Title (ES)
-            </span>
-            <input
-              type="text"
-              value={titleEs}
-              onChange={(event) => setTitleEs(event.target.value)}
-              style={adminTypography.input}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <span className="uppercase" style={adminTypography.label}>
-              Subtitle (ES)
-            </span>
-            <input
-              type="text"
-              value={subtitleEs}
-              onChange={(event) => setSubtitleEs(event.target.value)}
-              style={adminTypography.input}
-            />
-          </div>
-
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => setEsTab("write")}
-                className="uppercase"
-                style={esTab === "write" ? adminTypography.tabActive : adminTypography.tab}
-              >
-                Write
-              </button>
-              <button
-                type="button"
-                onClick={() => setEsTab("preview")}
-                className="uppercase"
-                style={esTab === "preview" ? adminTypography.tabActive : adminTypography.tab}
-              >
-                Preview
-              </button>
-            </div>
-
-            <div style={{ display: esTab === "write" ? "block" : "none" }}>
-              <textarea
-                value={contentEs}
-                onChange={(event) => setContentEs(event.target.value)}
-                style={{ ...adminTypography.textarea, height: EDITOR_HEIGHT, width: "100%", resize: "vertical" }}
-              />
-            </div>
-
-            <div
-              style={{
-                ...adminTypography.textarea,
-                height: EDITOR_HEIGHT,
-                overflowY: "auto",
-                display: esTab === "preview" ? "block" : "none",
-              }}
+            <button
+              type="button"
+              onClick={() => setEsTab("preview")}
+              className="uppercase"
+              style={esTab === "preview" ? adminTypography.tabActive : adminTypography.tab}
             >
-              <MarkdownContent content={contentEs} />
-            </div>
+              Preview
+            </button>
+          </div>
+
+          <div style={{ display: esTab === "write" ? "block" : "none" }}>
+            <textarea
+              value={contentEs}
+              onChange={(event) => setContentEs(event.target.value)}
+              style={{ ...adminTypography.textarea, height: EDITOR_HEIGHT, width: "100%", resize: "vertical" }}
+            />
+          </div>
+
+          <div
+            style={{
+              ...adminTypography.textarea,
+              height: EDITOR_HEIGHT,
+              overflowY: "auto",
+              display: esTab === "preview" ? "block" : "none",
+            }}
+          >
+            <MarkdownContent content={contentEs} />
           </div>
         </div>
-      )}
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <span className="uppercase" style={adminTypography.label}>

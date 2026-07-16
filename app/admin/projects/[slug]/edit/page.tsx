@@ -11,7 +11,7 @@ export default async function EditProjectPage({
   const { slug } = await params;
 
   const [project] = await sql<ContentFormInitialData[]>`
-    select slug, title, subtitle, content, status, image_url, repo_url, live_url, stage, asset_prefix
+    select slug, title, subtitle, content, title_es, subtitle_es, content_es, status, image_url, repo_url, live_url, stage, asset_prefix
     from projects
     where slug = ${slug}
   `;

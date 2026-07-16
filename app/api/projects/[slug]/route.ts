@@ -45,6 +45,9 @@ export async function PUT(
     stage,
     slug: requestedSlug,
     subtitle,
+    title_es,
+    subtitle_es,
+    content_es,
     image_url,
     repo_url,
     live_url,
@@ -68,6 +71,9 @@ export async function PUT(
       update projects set
         title = ${title ?? existing.title},
         subtitle = ${subtitle !== undefined ? subtitle : existing.subtitle},
+        title_es = ${title_es !== undefined ? title_es : existing.title_es},
+        subtitle_es = ${subtitle_es !== undefined ? subtitle_es : existing.subtitle_es},
+        content_es = ${content_es !== undefined ? content_es : existing.content_es},
         slug = ${newSlug},
         content = ${content ?? existing.content},
         status = ${newStatus},
@@ -79,7 +85,7 @@ export async function PUT(
         asset_prefix = ${newAssetPrefix},
         updated_at = now()
       where id = ${existing.id}
-      returning id, title, subtitle, slug, status, stage, created_at, updated_at, published_at, image_url, repo_url, live_url, asset_prefix
+      returning id, title, subtitle, title_es, subtitle_es, slug, status, stage, created_at, updated_at, published_at, image_url, repo_url, live_url, asset_prefix
     `
     return NextResponse.json(updated)
   } catch (error) {

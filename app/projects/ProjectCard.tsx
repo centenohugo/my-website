@@ -10,6 +10,8 @@ export type Project = {
   slug: string;
   title: string;
   subtitle: string | null;
+  title_es?: string | null;
+  subtitle_es?: string | null;
   published_at: string | null;
   image_url: string | null;
   stage: ProjectStage;
@@ -18,6 +20,9 @@ export type Project = {
 export default function ProjectCard({ project }: { project: Project }) {
   const { locale } = useLocale();
   const t = getDictionary(locale);
+  const title = locale === "es" && project.title_es ? project.title_es : project.title;
+  const subtitle =
+    locale === "es" && project.subtitle_es ? project.subtitle_es : project.subtitle;
 
   return (
     <Link
@@ -51,12 +56,12 @@ export default function ProjectCard({ project }: { project: Project }) {
         </div>
 
         <h3 style={{ ...projectTypography.cardTitle, textWrap: "pretty" }}>
-          {project.title}
+          {title}
         </h3>
 
-        {project.subtitle && (
+        {subtitle && (
           <p style={{ ...projectTypography.cardSubtitle, textWrap: "pretty" }}>
-            {project.subtitle}
+            {subtitle}
           </p>
         )}
       </div>

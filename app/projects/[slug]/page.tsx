@@ -12,6 +12,9 @@ type ProjectDetail = {
   title: string;
   subtitle: string | null;
   content: string;
+  title_es: string | null;
+  subtitle_es: string | null;
+  content_es: string | null;
   published_at: string | null;
   image_url: string | null;
   stage: ProjectStage;
@@ -44,7 +47,7 @@ export default async function ProjectPage({
   const isAdmin = await hasAdminSession();
 
   const [project] = await sql<ProjectDetail[]>`
-    select title, subtitle, content, published_at, image_url, stage, repo_url, live_url, status
+    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url, stage, repo_url, live_url, status
     from projects
     where slug = ${slug}
       and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
@@ -53,6 +56,12 @@ export default async function ProjectPage({
   if (!project) {
     notFound();
   }
+
+  const title = locale === "es" && project.title_es ? project.title_es : project.title;
+  const subtitle =
+    locale === "es" && project.subtitle_es ? project.subtitle_es : project.subtitle;
+  const content =
+    locale === "es" && project.content_es ? project.content_es : project.content;
 
   return (
     <main className="pb-16" style={{ paddingTop: projectLayout.headerTopSpace }}>
@@ -88,9 +97,9 @@ export default async function ProjectPage({
               {t.projects.stages[project.stage]}
             </span>
           </div>
-          <h1 style={{ ...projectTypography.postTitle, textWrap: "pretty" }}>{project.title}</h1>
-          {project.subtitle && (
-            <p style={{ ...projectTypography.postSubtitle, textWrap: "pretty" }}>{project.subtitle}</p>
+          <h1 style={{ ...projectTypography.postTitle, textWrap: "pretty" }}>{title}</h1>
+          {subtitle && (
+            <p style={{ ...projectTypography.postSubtitle, textWrap: "pretty" }}>{subtitle}</p>
           )}
 
           {(project.repo_url || project.live_url) && (
@@ -128,7 +137,7 @@ export default async function ProjectPage({
       >
         <hr className="my-8" style={{ borderColor: projectColors.dateMono }} />
 
-        <MarkdownContent content={project.content} />
+        <MarkdownContent content={content} />
       </div>
     </main>
   );

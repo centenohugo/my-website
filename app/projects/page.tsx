@@ -10,7 +10,7 @@ export default async function ProjectsPage() {
   const t = getDictionary(locale);
 
   const initialProjects = await sql<Project[]>`
-    select slug, title, subtitle, published_at, image_url, stage
+    select slug, title, subtitle, title_es, subtitle_es, published_at, image_url, stage
     from projects
     where status = 'published'
     order by published_at desc
