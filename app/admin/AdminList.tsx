@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { formatFullDate } from "@/lib/i18n/formatDate";
 import CopyLinkButton from "./CopyLinkButton";
 import DeleteContentButton from "./DeleteContentButton";
 import { adminColors, adminTypography } from "./theme";
@@ -8,6 +9,7 @@ export type AdminListItem = {
   title: string;
   status: "draft" | "published";
   share_token: string;
+  published_at: string | null;
 };
 
 export default function AdminList({
@@ -31,10 +33,19 @@ export default function AdminList({
           className="flex items-center justify-between gap-4 border-b py-4"
           style={{ borderColor: adminColors.tagPlaceholder }}
         >
-          <div className="flex flex-col gap-1">
+          <div className="flex min-w-0 flex-col gap-1">
             <span style={adminTypography.listTitle}>{item.title}</span>
-            <span className="uppercase" style={adminTypography.badge}>
-              {item.status === "published" ? "Published" : "Draft"}
+            {/* items-center keeps the badge hugging its own text: as a stretched
+                column flex item it would take the width of the title above it,
+                so badges came out a different size on every row. */}
+            <span className="flex items-center gap-2">
+              <span className="uppercase" style={adminTypography.badge}>
+                {item.status === "published" ? "Published" : "Draft"}
+              </span>
+              <span className="uppercase" style={adminTypography.listMeta}>
+                {/* The admin panel is English-only. */}
+                {formatFullDate(item.published_at, "en") || "No date"}
+              </span>
             </span>
           </div>
 
