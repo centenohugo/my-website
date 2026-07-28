@@ -1,8 +1,21 @@
-// Free variants get retired upstream without notice; if this one loses its
-// providers OpenRouter 404s and translation dies. Override with OPENROUTER_MODEL.
-const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
+// A :free model is one pool shared by every OpenRouter user, so it answers or
+// 429s depending on what strangers are doing that minute — and free variants
+// get retired outright without notice. Neither is survivable on a single
+// model, so try several across different providers. Ordered by translation
+// quality on a sample article; OPENROUTER_MODEL overrides (comma-separated).
+// Reasoning models are deliberately last: this is a mechanical translation,
+// and one that thinks for 800 tokens first sometimes spends the whole budget
+// reasoning and returns empty content.
+const DEFAULT_MODELS = [
+  "inclusionai/ling-3.0-flash:free",
+  "google/gemma-4-31b-it:free",
+  "openai/gpt-oss-20b:free",
+  "nvidia/nemotron-3-super-120b-a12b:free",
+];
 // Kept just under the route's maxDuration so we surface our own error instead
-// of letting the platform kill the function with an opaque 504.
+// of letting the platform kill the function with an opaque 504. It is the
+// budget for the whole chain, not per attempt — the caller is a human waiting
+// on a button, and they don't care which model eventually answered.
 const TIMEOUT_MS = 55000;
 
 type TranslationInput = {
@@ -76,6 +89,66 @@ function parseTranslationResponse(raw: string): TranslationOutput {
   };
 }
 
+class UpstreamError extends Error {
+  constructor(
+    readonly status: number,
+    message: string
+  ) {
+    super(message);
+    this.name = "UpstreamError";
+  }
+}
+
+// OpenRouter wraps the provider's own words in error.metadata.raw — that is
+// where "temporarily rate-limited upstream" lives, and it is the difference
+// between a bad key and a busy pool.
+function describeFailure(status: number, body: string) {
+  let reason = "";
+  try {
+    const parsed = JSON.parse(body);
+    reason = parsed?.error?.metadata?.raw || parsed?.error?.message || "";
+  } catch {
+    reason = body.slice(0, 160);
+  }
+  return `request failed: ${status}${reason ? ` — ${reason}` : ""}`;
+}
+
+async function requestTranslation(
+  model: string,
+  input: TranslationInput,
+  apiKey: string,
+  signal: AbortSignal
+): Promise<TranslationOutput> {
+  const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model,
+      messages: [
+        { role: "system", content: SYSTEM_PROMPT },
+        { role: "user", content: buildUserMessage(input) },
+      ],
+    }),
+    signal,
+  });
+
+  if (!res.ok) {
+    const body = await res.text().catch(() => "");
+    throw new UpstreamError(res.status, describeFailure(res.status, body));
+  }
+
+  const data = await res.json();
+  const content = data.choices?.[0]?.message?.content;
+  if (typeof content !== "string") {
+    throw new Error("Chat completions response had no message content");
+  }
+
+  return parseTranslationResponse(content);
+}
+
 export async function translateToSpanish(
   input: TranslationInput
 ): Promise<TranslationResult> {
@@ -84,50 +157,54 @@ export async function translateToSpanish(
     throw new Error("OPENROUTER_API_KEY is not set");
   }
 
-  const model = process.env.OPENROUTER_MODEL || DEFAULT_MODEL;
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), TIMEOUT_MS);
-  const startedAt = Date.now();
+  const models =
+    process.env.OPENROUTER_MODEL?.split(",")
+      .map((model) => model.trim())
+      .filter(Boolean) ?? DEFAULT_MODELS;
 
-  try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
+  const deadline = Date.now() + TIMEOUT_MS;
+  let lastError: unknown;
+
+  for (const model of models) {
+    const remaining = deadline - Date.now();
+    if (remaining <= 0) throw new TranslationTimeoutError();
+
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), remaining);
+    const startedAt = Date.now();
+
+    try {
+      const output = await requestTranslation(
         model,
-        messages: [
-          { role: "system", content: SYSTEM_PROMPT },
-          { role: "user", content: buildUserMessage(input) },
-        ],
-      }),
-      signal: controller.signal,
-    });
-
-    if (!res.ok) {
-      throw new Error(`Chat completions request failed: ${res.status}`);
+        input,
+        apiKey,
+        controller.signal
+      );
+      const durationMs = Date.now() - startedAt;
+      console.info(
+        `Translated via OpenRouter ${model} in ${(durationMs / 1000).toFixed(1)}s`
+      );
+      return { ...output, model, durationMs };
+    } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new TranslationTimeoutError();
+      }
+      // A rejected key fails identically on every model, so trying the rest
+      // just burns the caller's remaining seconds.
+      if (
+        error instanceof UpstreamError &&
+        (error.status === 401 || error.status === 403)
+      ) {
+        throw error;
+      }
+      lastError = error;
+      const reason = error instanceof Error ? error.message : "unknown error";
+      console.warn(`Translation via ${model} failed (${reason}); trying next`);
+    } finally {
+      clearTimeout(timeout);
     }
-
-    const data = await res.json();
-    const content = data.choices?.[0]?.message?.content;
-    if (typeof content !== "string") {
-      throw new Error("Chat completions response had no message content");
-    }
-
-    const output = parseTranslationResponse(content);
-    const durationMs = Date.now() - startedAt;
-    console.info(
-      `Translated via OpenRouter ${model} in ${(durationMs / 1000).toFixed(1)}s`
-    );
-    return { ...output, model, durationMs };
-  } catch (error) {
-    if (error instanceof Error && error.name === "AbortError") {
-      throw new TranslationTimeoutError();
-    }
-    throw error;
-  } finally {
-    clearTimeout(timeout);
   }
+
+  const reason = lastError instanceof Error ? lastError.message : "unknown error";
+  throw new Error(`all ${models.length} models failed, last: ${reason}`);
 }
