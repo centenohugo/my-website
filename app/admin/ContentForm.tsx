@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
+import { toDateInputValue } from "@/lib/publishedDate";
 import MarkdownContent from "../MarkdownContent";
 import { ImageIcon, TrashIcon, UploadIcon } from "./icons";
 import { adminColors, adminTypography } from "./theme";
@@ -14,6 +15,8 @@ export type ContentFormInitialData = {
   subtitle: string | null;
   content: string;
   status: "draft" | "published";
+  // postgres.js hands back a Date for timestamptz; RSC serialises it intact.
+  published_at?: string | Date | null;
   image_url: string | null;
   repo_url?: string | null;
   live_url?: string | null;
@@ -81,6 +84,10 @@ export default function ContentForm({
   const [status, setStatus] = useState<"draft" | "published">(
     initialData?.status ?? "draft"
   );
+  // Blank on a new article means "stamp it when it publishes"; on an existing
+  // one it means "clear the date". Prefilled on edit so the box always mirrors
+  // the row — backdate an article by typing the day the work actually happened.
+  const [date, setDate] = useState(toDateInputValue(initialData?.published_at));
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [repoUrl, setRepoUrl] = useState(initialData?.repo_url ?? "");
   const [liveUrl, setLiveUrl] = useState(initialData?.live_url ?? "");
@@ -221,6 +228,7 @@ export default function ContentForm({
       subtitle: subtitle || null,
       content,
       status,
+      published_at: date || null,
       image_url: imageUrl || null,
       asset_prefix: assetPrefix,
       title_es: titleEs || null,
@@ -278,6 +286,18 @@ export default function ContentForm({
           type="text"
           value={subtitle}
           onChange={(event) => setSubtitle(event.target.value)}
+          style={adminTypography.input}
+        />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <span className="uppercase" style={adminTypography.label}>
+          Date
+        </span>
+        <input
+          type="date"
+          value={date}
+          onChange={(event) => setDate(event.target.value)}
           style={adminTypography.input}
         />
       </div>

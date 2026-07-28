@@ -1,4 +1,6 @@
-const DEFAULT_MODEL = "tencent/hy3:free";
+// Free variants get retired upstream without notice; if this one loses its
+// providers OpenRouter 404s and translation dies. Override with OPENROUTER_MODEL.
+const DEFAULT_MODEL = "google/gemma-4-31b-it:free";
 // Kept just under the route's maxDuration so we surface our own error instead
 // of letting the platform kill the function with an opaque 504.
 const TIMEOUT_MS = 55000;
