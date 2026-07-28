@@ -8,13 +8,18 @@ export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
   const [posts, projects] = await Promise.all([
+    // published_at is a calendar day (see lib/publishedDate.ts), so it comes
+    // back as a plain YYYY-MM-DD string rather than a timestamp the formatter
+    // would have to re-pin to UTC.
     sql<AdminListItem[]>`
-      select slug, title, status, share_token
+      select slug, title, status, share_token,
+             to_char(published_at at time zone 'utc', 'YYYY-MM-DD') as published_at
       from posts
       order by created_at desc
     `,
     sql<AdminListItem[]>`
-      select slug, title, status, share_token
+      select slug, title, status, share_token,
+             to_char(published_at at time zone 'utc', 'YYYY-MM-DD') as published_at
       from projects
       order by created_at desc
     `,
