@@ -11,17 +11,22 @@ export default async function AdminPage() {
     // published_at is a calendar day (see lib/publishedDate.ts), so it comes
     // back as a plain YYYY-MM-DD string rather than a timestamp the formatter
     // would have to re-pin to UTC.
+    //
+    // Both tabs sort newest first on the date the entry actually shows, which is
+    // the order the public listings use, so a backdated entry sits in the same
+    // place here as it does on the site. Entries with no date yet come first —
+    // they are drafts in progress, and burying them at the bottom hides them.
     sql<AdminListItem[]>`
       select slug, title, status, share_token,
              to_char(published_at at time zone 'utc', 'YYYY-MM-DD') as published_at
       from posts
-      order by created_at desc
+      order by published_at desc nulls first, created_at desc
     `,
     sql<AdminListItem[]>`
       select slug, title, status, share_token,
              to_char(published_at at time zone 'utc', 'YYYY-MM-DD') as published_at
       from projects
-      order by created_at desc
+      order by published_at desc nulls first, created_at desc
     `,
   ]);
 
