@@ -1,11 +1,13 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useRef, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { toDateInputValue } from "@/lib/publishedDate";
 import MarkdownContent from "../MarkdownContent";
+import { baselineSnapshot, draftKey, type DraftSnapshot } from "./draftStorage";
 import { ImageIcon, TrashIcon, UploadIcon } from "./icons";
 import { adminColors, adminTypography } from "./theme";
+import { useDraftAutosave } from "./useDraftAutosave";
 
 export type ContentStage = "in_progress" | "completed" | "archived";
 
@@ -28,6 +30,14 @@ export type ContentFormInitialData = {
 };
 
 const EDITOR_HEIGHT = "720px";
+
+function formatDraftTime(timestamp: number | null) {
+  if (timestamp === null) return "";
+  return new Date(timestamp).toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
 
 // Vercel serverless functions reject request bodies over ~4.5 MB, so we
 // downscale + re-encode to WebP in the browser before sending the upload.
@@ -87,7 +97,8 @@ export default function ContentForm({
   // Blank on a new article means "stamp it when it publishes"; on an existing
   // one it means "clear the date". Prefilled on edit so the box always mirrors
   // the row — backdate an article by typing the day the work actually happened.
-  const [date, setDate] = useState(toDateInputValue(initialData?.published_at));
+  const initialDate = toDateInputValue(initialData?.published_at);
+  const [date, setDate] = useState(initialDate);
   const [imageUrl, setImageUrl] = useState(initialData?.image_url ?? "");
   const [repoUrl, setRepoUrl] = useState(initialData?.repo_url ?? "");
   const [liveUrl, setLiveUrl] = useState(initialData?.live_url ?? "");
@@ -101,9 +112,15 @@ export default function ContentForm({
   // Immutable id for this article's blob folder (posts/<id>/ or
   // projects/<id>/). Generated once per new article; articles created before
   // the folder scheme get one on their first edit that uploads an image.
-  const [assetPrefix] = useState(
+  // Only ever reassigned by restoring an autosaved draft, which carries the
+  // prefix its images were already uploaded under — adopting it keeps those
+  // blobs attached to the article instead of orphaning them in a dead folder.
+  const [assetPrefix, setAssetPrefix] = useState(
     () => initialData?.asset_prefix ?? crypto.randomUUID()
   );
+  // The prefix this form opened with, frozen for the dirty comparison so a
+  // restore that swaps it in reads as a change.
+  const [mountedAssetPrefix] = useState(assetPrefix);
 
   const [titleEs, setTitleEs] = useState(initialData?.title_es ?? "");
   const [subtitleEs, setSubtitleEs] = useState(initialData?.subtitle_es ?? "");
@@ -117,6 +134,75 @@ export default function ContentForm({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inlineFileInputRef = useRef<HTMLInputElement>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
+
+  const snapshot: DraftSnapshot = useMemo(
+    () => ({
+      title,
+      subtitle,
+      content,
+      status,
+      date,
+      imageUrl,
+      repoUrl,
+      liveUrl,
+      stage,
+      titleEs,
+      subtitleEs,
+      contentEs,
+      assetPrefix,
+    }),
+    [
+      title,
+      subtitle,
+      content,
+      status,
+      date,
+      imageUrl,
+      repoUrl,
+      liveUrl,
+      stage,
+      titleEs,
+      subtitleEs,
+      contentEs,
+      assetPrefix,
+    ]
+  );
+
+  const baseline = useMemo(
+    () => baselineSnapshot(initialData, mountedAssetPrefix, initialDate),
+    [initialData, mountedAssetPrefix, initialDate]
+  );
+
+  const storageKey = draftKey(kind, mode, initialData?.slug);
+  const isDirty = JSON.stringify(snapshot) !== JSON.stringify(baseline);
+
+  const {
+    recovered,
+    recoveredAt,
+    savedAt,
+    failed,
+    dismissRecovered,
+    discard,
+    finish,
+  } = useDraftAutosave({ storageKey, snapshot, isDirty });
+
+  function restoreDraft() {
+    if (!recovered) return;
+    setTitle(recovered.title);
+    setSubtitle(recovered.subtitle);
+    setContent(recovered.content);
+    setStatus(recovered.status);
+    setDate(recovered.date);
+    setImageUrl(recovered.imageUrl);
+    setRepoUrl(recovered.repoUrl);
+    setLiveUrl(recovered.liveUrl);
+    setStage(recovered.stage);
+    setTitleEs(recovered.titleEs);
+    setSubtitleEs(recovered.subtitleEs);
+    setContentEs(recovered.contentEs);
+    setAssetPrefix(recovered.assetPrefix);
+    dismissRecovered();
+  }
 
   async function uploadImage(file: File): Promise<string> {
     const compressed = await compressImage(file);
@@ -255,6 +341,10 @@ export default function ContentForm({
       return;
     }
 
+    // The work is in the database now, so the recovery copy has done its job.
+    // Left behind, it would be offered back the next time this form opens.
+    finish();
+
     // Replace the edit/new entry: the slug may have changed on save, so going
     // back to the old edit URL would 404.
     router.replace(listHref);
@@ -265,6 +355,40 @@ export default function ContentForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+      {/* Rendered only after the mount effect finds a draft, so there is no
+          server/client markup to mismatch on hydration. */}
+      {recovered && (
+        <div
+          className="flex flex-wrap items-center gap-3"
+          style={{
+            backgroundColor: adminColors.paperElevated,
+            border: `1px solid ${adminColors.tagPlaceholder}`,
+            borderRadius: "3px",
+            padding: "12px 14px",
+          }}
+        >
+          <span style={adminTypography.label}>
+            Unsaved changes from {formatDraftTime(recoveredAt)} were recovered.
+          </span>
+          <button
+            type="button"
+            onClick={restoreDraft}
+            className="uppercase"
+            style={{ ...adminTypography.buttonSecondary, cursor: "pointer" }}
+          >
+            Restore
+          </button>
+          <button
+            type="button"
+            onClick={discard}
+            className="uppercase"
+            style={{ ...adminTypography.tab, cursor: "pointer" }}
+          >
+            Discard
+          </button>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <span className="uppercase" style={adminTypography.label}>
           Title
@@ -576,14 +700,27 @@ export default function ContentForm({
 
       {error && <span style={{ ...adminTypography.label, color: "#a24b3f" }}>{error}</span>}
 
-      <button
-        type="submit"
-        disabled={busy}
-        className="w-fit uppercase"
-        style={adminTypography.buttonPrimary}
-      >
-        {submitting ? "Saving…" : heroUploading || inlineUploading ? "Waiting for upload…" : "Save"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          type="submit"
+          disabled={busy}
+          className="w-fit uppercase"
+          style={adminTypography.buttonPrimary}
+        >
+          {submitting ? "Saving…" : heroUploading || inlineUploading ? "Waiting for upload…" : "Save"}
+        </button>
+        {failed ? (
+          <span style={{ ...adminTypography.label, color: "#a24b3f" }}>
+            Couldn&rsquo;t autosave in this browser — save before leaving.
+          </span>
+        ) : (
+          savedAt !== null && (
+            <span style={adminTypography.label}>
+              Draft autosaved {formatDraftTime(savedAt)}
+            </span>
+          )
+        )}
+      </div>
     </form>
   );
 }
