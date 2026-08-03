@@ -34,7 +34,9 @@ export default function AdminList({
           style={{ borderColor: adminColors.tagPlaceholder }}
         >
           <div className="flex min-w-0 flex-col gap-1">
-            <span style={adminTypography.listTitle}>{item.title}</span>
+            <span className="truncate" style={adminTypography.listTitle}>
+              {item.title}
+            </span>
             {/* items-center keeps the badge hugging its own text: as a stretched
                 column flex item it would take the width of the title above it,
                 so badges came out a different size on every row. */}
@@ -49,7 +51,9 @@ export default function AdminList({
             </span>
           </div>
 
-          <div className="flex items-center gap-3">
+          {/* shrink-0 keeps a long title from squeezing the actions until their
+              labels wrap onto a second line. */}
+          <div className="flex shrink-0 items-center gap-3">
             <CopyLinkButton
               publicHrefBase={publicHrefBase}
               slug={item.slug}
@@ -58,8 +62,8 @@ export default function AdminList({
             />
             <Link
               href={`${editHrefBase}/${item.slug}/edit`}
-              className="uppercase"
-              style={adminTypography.buttonSecondary}
+              className="inline-block text-center uppercase"
+              style={adminTypography.listAction}
             >
               Edit
             </Link>
