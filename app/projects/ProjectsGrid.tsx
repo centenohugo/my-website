@@ -20,7 +20,7 @@ export default function ProjectsGrid({ initialProjects }: { initialProjects: Pro
       thresholdPx={projectScrollBehavior.thresholdPx}
       gridGap={projectLayout.gridGapComfortable}
       getKey={(project) => project.slug}
-      renderItem={(project) => <ProjectCard project={project} />}
+      renderItem={(project, index) => <ProjectCard project={project} eager={index === 0} />}
       doneLabel=""
       loadingLabel={t.projects.loadingMore}
       indicatorStyle={projectTypography.scrollIndicator}

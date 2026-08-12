@@ -61,7 +61,8 @@ export default function InfiniteCardGrid<T>({
   thresholdPx: number;
   gridGap: string;
   getKey: (item: T) => string;
-  renderItem: (item: T) => React.ReactNode;
+  /** `index` lets the caller eager-load the first card: it is the LCP element. */
+  renderItem: (item: T, index: number) => React.ReactNode;
   doneLabel: string;
   loadingLabel: string;
   indicatorStyle: CSSProperties;
@@ -196,8 +197,8 @@ export default function InfiniteCardGrid<T>({
         style={{ gap: gridGap }}
         onClickCapture={handleGridClickCapture}
       >
-        {items.map((item) => (
-          <div key={getKey(item)}>{renderItem(item)}</div>
+        {items.map((item, index) => (
+          <div key={getKey(item)}>{renderItem(item, index)}</div>
         ))}
       </div>
 

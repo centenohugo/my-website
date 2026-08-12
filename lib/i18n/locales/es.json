@@ -15,6 +15,7 @@
   },
   "blog": {
     "pageTitle": "Blog",
+    "metaDescription": "Notas y artículos de Hugo Centeno Sanz sobre ingeniería, proyectos personales y lo aprendido construyéndolos.",
     "loadingMore": "Cargando más ·"
   },
   "about": {
@@ -25,6 +26,7 @@
   },
   "projects": {
     "pageTitle": "Proyectos",
+    "metaDescription": "Cosas que ha construido Hugo Centeno Sanz — proyectos de software, qué hacen y cómo se hicieron.",
     "loadingMore": "Cargando más ·",
     "codeLink": "Código",
     "liveLink": "Ver proyecto",

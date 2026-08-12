@@ -1,41 +1,84 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { sql } from "@/lib/db";
+import { toExcerpt } from "@/lib/excerpt";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
+import { toIsoString } from "@/lib/publishedDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
+import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
+import CoverImage from "../../CoverImage";
+import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
 import { blogColors, blogLayout, blogTypography } from "../theme";
+import { getPost, type PostDetail } from "./getPost";
 
-type PostDetail = {
-  title: string;
-  subtitle: string | null;
-  content: string;
-  title_es: string | null;
-  subtitle_es: string | null;
-  content_es: string | null;
-  published_at: string | null;
-  image_url: string | null;
-  status: "draft" | "published";
-};
+type Params = Promise<{ slug: string }>;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
+
+/** The Spanish column when it exists and Spanish is selected, else the original. */
+function localized(post: PostDetail, locale: "en" | "es") {
+  const useEs = locale === "es";
+  return {
+    title: useEs && post.title_es ? post.title_es : post.title,
+    subtitle: useEs && post.subtitle_es ? post.subtitle_es : post.subtitle,
+    content: useEs && post.content_es ? post.content_es : post.content,
+  };
+}
 
 export async function generateMetadata({
+  params,
   searchParams,
 }: {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: Params;
+  searchParams: SearchParams;
 }): Promise<Metadata> {
-  // Share links point at unpublished drafts; keep them out of search indexes.
-  const { share } = await searchParams;
-  return share ? { robots: { index: false, follow: false } } : {};
+  const { slug } = await params;
+  const shareToken = toShareToken((await searchParams).share);
+  const isAdmin = await hasAdminSession();
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+
+  const post = await getPost(slug, isAdmin, shareToken);
+  if (!post) return {};
+
+  const { title, subtitle, content } = localized(post, locale);
+  const description = subtitle || toExcerpt(content);
+  const url = absoluteUrl(`/blog/${slug}`);
+
+  // A draft is only reachable through a share link or an admin session. Either
+  // way it is not public, so it must never enter an index.
+  const isPublic = post.status === "published" && !shareToken;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `/blog/${slug}` },
+    robots: isPublic ? undefined : { index: false, follow: false },
+    openGraph: {
+      type: "article",
+      url,
+      title,
+      description,
+      publishedTime: toIsoString(post.published_at),
+      modifiedTime: toIsoString(post.updated_at),
+      authors: [AUTHOR_NAME],
+      images: post.image_url ? [post.image_url] : undefined,
+    },
+    twitter: {
+      card: post.image_url ? "summary_large_image" : "summary",
+      title,
+      description,
+      images: post.image_url ? [post.image_url] : undefined,
+    },
+  };
 }
 
 export default async function PostPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: Params;
+  searchParams: SearchParams;
 }) {
   const { slug } = await params;
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
@@ -43,38 +86,69 @@ export default async function PostPage({
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
 
-  const [post] = await sql<PostDetail[]>`
-    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url, status
-    from posts
-    where slug = ${slug}
-      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
-  `;
+  const post = await getPost(slug, isAdmin, shareToken);
 
   if (!post) {
     notFound();
   }
 
-  const title = locale === "es" && post.title_es ? post.title_es : post.title;
-  const subtitle = locale === "es" && post.subtitle_es ? post.subtitle_es : post.subtitle;
-  const content = locale === "es" && post.content_es ? post.content_es : post.content;
+  const { title, subtitle, content } = localized(post, locale);
+  const isPublic = post.status === "published" && !shareToken;
 
   return (
     <main className="pb-16" style={{ paddingTop: blogLayout.headerTopSpace }}>
+      {isPublic && (
+        <>
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BlogPosting",
+              "@id": absoluteUrl(`/blog/${slug}#article`),
+              mainEntityOfPage: absoluteUrl(`/blog/${slug}`),
+              headline: title,
+              description: subtitle || toExcerpt(content),
+              inLanguage: locale,
+              datePublished: toIsoString(post.published_at),
+              dateModified: toIsoString(post.updated_at ?? post.published_at),
+              image: post.image_url ? [post.image_url] : undefined,
+              author: {
+                "@type": "Person",
+                name: AUTHOR_NAME,
+                url: absoluteUrl("/about"),
+                sameAs: AUTHOR_PROFILES,
+              },
+              publisher: {
+                "@type": "Person",
+                name: AUTHOR_NAME,
+                url: SITE_URL,
+              },
+            }}
+          />
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                { "@type": "ListItem", position: 1, name: t.nav.blog, item: absoluteUrl("/blog") },
+                { "@type": "ListItem", position: 2, name: title },
+              ],
+            }}
+          />
+        </>
+      )}
+
       <div className="flex flex-col md:flex-row-reverse">
         <div className="w-full px-[44px] md:w-1/2 md:px-0">
-          <div
+          <CoverImage
+            src={post.image_url}
             className="relative aspect-[3/2] w-full overflow-hidden md:aspect-auto md:h-[85vh]"
-            style={{
-              borderRadius: blogLayout.thumbnailRadius,
-              backgroundColor: post.image_url
-                ? "var(--background)"
-                : blogLayout.thumbnailColor,
-              backgroundImage: post.image_url
-                ? `url(${post.image_url})`
-                : blogLayout.thumbnailPattern,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
+            radius={blogLayout.thumbnailRadius}
+            fallbackColor={blogLayout.thumbnailColor}
+            fallbackPattern={blogLayout.thumbnailPattern}
+            // Full width stacked on mobile, half the viewport once the header
+            // splits into two columns at md.
+            sizes="(max-width: 768px) 100vw, 50vw"
+            eager
           />
         </div>
 
