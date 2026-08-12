@@ -1,9 +1,26 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import ProjectsGrid from "./ProjectsGrid";
 import type { Project } from "./ProjectCard";
 import { projectLayout, projectScrollBehavior, projectTypography } from "./theme";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
+  return {
+    title: t.projects.pageTitle,
+    description: t.projects.metaDescription,
+    alternates: { canonical: "/projects" },
+    openGraph: {
+      type: "website",
+      url: "/projects",
+      title: t.projects.pageTitle,
+      description: t.projects.metaDescription,
+    },
+  };
+}
 
 export default async function ProjectsPage() {
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);

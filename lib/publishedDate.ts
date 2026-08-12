@@ -27,6 +27,19 @@ export function parseDateInput(value: unknown): Date | null | undefined {
 }
 
 /**
+ * Turn a stored timestamp into the ISO-8601 string metadata expects.
+ *
+ * The `postgres` driver hands back `Date` objects for timestamptz columns. Next
+ * stringifies Open Graph values directly, so passing the Date through yields a
+ * literal "[object Object]" in `article:published_time` — coerce here instead.
+ */
+export function toIsoString(value: string | Date | null | undefined): string | undefined {
+  if (!value) return undefined
+  const date = value instanceof Date ? value : new Date(value)
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString()
+}
+
+/**
  * Turn a stored timestamp into an <input type="date"> value. Extracts the day
  * in UTC — using the local getters here would shift the date by one for anyone
  * west of UTC, which is exactly the bug this module exists to avoid.

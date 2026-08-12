@@ -9,7 +9,7 @@ function localeTag(locale: Locale) {
 // visitor's timezone while the detail pages (server components) render in the
 // server's, which both mismatches on hydration and shows a date stored at
 // midnight as the previous day — and therefore the previous month, on cards.
-export function formatCardDate(published_at: string | null, locale: Locale) {
+export function formatCardDate(published_at: string | Date | null, locale: Locale) {
   if (!published_at) return "";
   const date = new Date(published_at);
   return date
@@ -22,7 +22,7 @@ export function formatCardDate(published_at: string | null, locale: Locale) {
     .replace(".", "");
 }
 
-export function formatFullDate(published_at: string | null, locale: Locale) {
+export function formatFullDate(published_at: string | Date | null, locale: Locale) {
   if (!published_at) return "";
   const date = new Date(published_at);
   return date

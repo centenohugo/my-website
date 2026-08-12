@@ -1,9 +1,26 @@
+import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import BlogGrid from "./BlogGrid";
 import type { Post } from "./PostCard";
 import { blogLayout, blogScrollBehavior, blogTypography } from "./theme";
+
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const t = getDictionary(locale);
+  return {
+    title: t.blog.pageTitle,
+    description: t.blog.metaDescription,
+    alternates: { canonical: "/blog" },
+    openGraph: {
+      type: "website",
+      url: "/blog",
+      title: t.blog.pageTitle,
+      description: t.blog.metaDescription,
+    },
+  };
+}
 
 export default async function BlogPage() {
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);

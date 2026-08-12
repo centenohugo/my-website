@@ -128,10 +128,25 @@ export default function MarkdownContent({ content }: { content: string }) {
               {children}
             </pre>
           ),
+          // The markdown alt text does double duty: it is the visible caption
+          // and the alt attribute. An image written without one is decorative,
+          // and alt="" is how you say that — omitting the attribute instead
+          // makes a screen reader read out the file name.
+          //
+          // This stays a plain <img> rather than next/image: the intrinsic
+          // dimensions aren't known at render time, and body images are below
+          // the fold, so lazy loading is the win available here.
           img: ({ src, alt }) => (
             <figure className="my-2 flex flex-col gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={alt ?? ""} className="w-full" style={{ borderRadius: "3px" }} />
+              <img
+                src={src}
+                alt={alt ?? ""}
+                loading="lazy"
+                decoding="async"
+                className="w-full"
+                style={{ borderRadius: "3px" }}
+              />
               {alt && <figcaption style={siteTypography.bodyCaption}>{alt}</figcaption>}
             </figure>
           ),

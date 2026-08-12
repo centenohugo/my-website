@@ -20,7 +20,7 @@ export default function BlogGrid({ initialPosts }: { initialPosts: Post[] }) {
       thresholdPx={blogScrollBehavior.thresholdPx}
       gridGap={blogLayout.gridGapComfortable}
       getKey={(post) => post.slug}
-      renderItem={(post) => <PostCard post={post} />}
+      renderItem={(post, index) => <PostCard post={post} eager={index === 0} />}
       doneLabel=""
       loadingLabel={t.blog.loadingMore}
       indicatorStyle={blogTypography.scrollIndicator}
