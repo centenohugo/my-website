@@ -37,7 +37,7 @@ export default function DeleteContentButton({
       onClick={handleDelete}
       disabled={pending}
       className="uppercase"
-      style={{ ...adminTypography.buttonSecondary, cursor: "pointer" }}
+      style={{ ...adminTypography.listAction, cursor: "pointer" }}
     >
       {pending ? "Deleting…" : "Delete"}
     </button>

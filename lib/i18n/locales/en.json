@@ -15,8 +15,8 @@
   },
   "blog": {
     "pageTitle": "Blog",
-    "loadingMore": "Loading more ·",
-    "metaDescription": "Posts by Hugo Centeno Sanz on what he is building, learning and reading."
+    "metaDescription": "Notes and write-ups by Hugo Centeno Sanz on engineering, side projects and things learned by building them.",
+    "loadingMore": "Loading more ·"
   },
   "about": {
     "name": "Hugo Centeno Sanz",
@@ -26,6 +26,7 @@
   },
   "projects": {
     "pageTitle": "Projects",
+    "metaDescription": "Things Hugo Centeno Sanz has built — software projects, what they do and how they were made.",
     "loadingMore": "Loading more ·",
     "codeLink": "Code",
     "liveLink": "View project",
@@ -33,7 +34,6 @@
       "in_progress": "In progress",
       "completed": "Completed",
       "archived": "Archived"
-    },
-    "metaDescription": "Things Hugo Centeno Sanz has built, each with a short write-up, its stage and links to the code."
+    }
   }
 }

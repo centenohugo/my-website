@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { absoluteUrl } from "@/lib/site";
 import BlogGrid from "./BlogGrid";
 import type { Post } from "./PostCard";
 import { blogLayout, blogScrollBehavior, blogTypography } from "./theme";
@@ -16,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: { canonical: "/blog" },
     openGraph: {
       type: "website",
-      url: absoluteUrl("/blog"),
-      title: `${t.blog.pageTitle} · ${t.meta.title}`,
+      url: "/blog",
+      title: t.blog.pageTitle,
       description: t.blog.metaDescription,
     },
   };
@@ -46,9 +45,6 @@ export default async function BlogPage() {
     >
       <header className="mb-10 flex flex-col gap-2">
         <h1 style={blogTypography.pageTitle}>{t.blog.pageTitle}</h1>
-        {/* The page title is one word; this says what the list actually is,
-            for screen readers and for agents reading the raw HTML. */}
-        <p className="sr-only">{t.blog.metaDescription}</p>
       </header>
 
       <BlogGrid initialPosts={initialPosts} />

@@ -36,6 +36,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Translation timed out' }, { status: 504 })
     }
     console.error('Translation failed', error)
-    return NextResponse.json({ error: 'Translation failed' }, { status: 502 })
+    // Everything past the session check is admin-only, so pass the upstream
+    // reason through: "request failed: 404" (retired model) and "failed: 401"
+    // (dead key) are indistinguishable from a flat "Translation failed".
+    const reason = error instanceof Error ? error.message : 'Unknown error'
+    return NextResponse.json(
+      { error: `Translation failed: ${reason}` },
+      { status: 502 }
+    )
   }
 }

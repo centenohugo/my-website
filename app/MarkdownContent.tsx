@@ -1,7 +1,46 @@
 import { Children, isValidElement } from "react";
+import type { ReactNode } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { siteColors, siteTypography } from "./theme";
+import { parseYouTubeUrl, youTubeEmbedUrl, type YouTubeVideo } from "./youtube";
+
+function YouTubeEmbed({ video }: { video: YouTubeVideo }) {
+  return (
+    <div
+      className="my-2 w-full"
+      style={{
+        // A Short at the full 768px column would stand 1365px tall, so vertical
+        // videos get a narrow centred frame instead of filling the measure.
+        maxWidth: video.vertical ? "400px" : undefined,
+        marginInline: video.vertical ? "auto" : undefined,
+      }}
+    >
+      <iframe
+        src={youTubeEmbedUrl(video)}
+        title="YouTube video player"
+        loading="lazy"
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+        referrerPolicy="strict-origin-when-cross-origin"
+        allowFullScreen
+        className="w-full"
+        style={{
+          aspectRatio: video.vertical ? "9 / 16" : "16 / 9",
+          border: "none",
+          borderRadius: "3px",
+          display: "block",
+        }}
+      />
+    </div>
+  );
+}
+
+/** The visible text of an autolinked URL is the URL itself; a labelled link differs. */
+function linkText(children: ReactNode): string {
+  return Children.toArray(children)
+    .map((child) => (typeof child === "string" ? child : ""))
+    .join("");
+}
 
 export default function MarkdownContent({ content }: { content: string }) {
   return (
@@ -17,6 +56,16 @@ export default function MarkdownContent({ content }: { content: string }) {
             const onlyChild = items.length === 1 ? items[0] : null;
             if (onlyChild && isValidElement(onlyChild) && "src" in (onlyChild.props as object)) {
               return <>{onlyChild}</>;
+            }
+            // A bare YouTube URL alone on its own line becomes a player. Giving the
+            // link a label is how you keep it a link.
+            if (onlyChild && isValidElement(onlyChild) && "href" in (onlyChild.props as object)) {
+              const { href, children: label } = onlyChild.props as {
+                href?: string;
+                children?: ReactNode;
+              };
+              const video = linkText(label) === href ? parseYouTubeUrl(href) : null;
+              if (video) return <YouTubeEmbed video={video} />;
             }
             return <p style={siteTypography.bodyParagraph}>{children}</p>;
           },
@@ -79,10 +128,25 @@ export default function MarkdownContent({ content }: { content: string }) {
               {children}
             </pre>
           ),
+          // The markdown alt text does double duty: it is the visible caption
+          // and the alt attribute. An image written without one is decorative,
+          // and alt="" is how you say that — omitting the attribute instead
+          // makes a screen reader read out the file name.
+          //
+          // This stays a plain <img> rather than next/image: the intrinsic
+          // dimensions aren't known at render time, and body images are below
+          // the fold, so lazy loading is the win available here.
           img: ({ src, alt }) => (
             <figure className="my-2 flex flex-col gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={src} alt={alt ?? ""} className="w-full" style={{ borderRadius: "3px" }} />
+              <img
+                src={src}
+                alt={alt ?? ""}
+                loading="lazy"
+                decoding="async"
+                className="w-full"
+                style={{ borderRadius: "3px" }}
+              />
               {alt && <figcaption style={siteTypography.bodyCaption}>{alt}</figcaption>}
             </figure>
           ),

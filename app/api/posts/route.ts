@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
+import { parseDateInput } from '@/lib/publishedDate'
 import { hasValidSession } from '@/lib/require-session'
 import { slugify } from '@/lib/slug'
 
@@ -52,7 +53,13 @@ export async function POST(request: Request) {
   }
 
   const slug = slugify(requestedSlug || title)
-  const publishedAt = status === 'published' ? new Date() : null
+  // A hand-entered date wins; otherwise fall back to stamping the moment of
+  // publication, so leaving the field blank keeps the old behaviour. Unlike the
+  // PUT handler, a null here is not meaningful — there is no existing date to
+  // clear on creation — so it falls through to the stamp as well.
+  const suppliedDate = parseDateInput(body.published_at)
+  const publishedAt =
+    suppliedDate ?? (status === 'published' ? new Date() : null)
 
   try {
     const [post] = await sql`

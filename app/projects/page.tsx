@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { absoluteUrl } from "@/lib/site";
 import ProjectsGrid from "./ProjectsGrid";
 import type { Project } from "./ProjectCard";
 import { projectLayout, projectScrollBehavior, projectTypography } from "./theme";
@@ -16,8 +15,8 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: { canonical: "/projects" },
     openGraph: {
       type: "website",
-      url: absoluteUrl("/projects"),
-      title: `${t.projects.pageTitle} · ${t.meta.title}`,
+      url: "/projects",
+      title: t.projects.pageTitle,
       description: t.projects.metaDescription,
     },
   };
@@ -46,9 +45,6 @@ export default async function ProjectsPage() {
     >
       <header className="mb-10 flex flex-col gap-2">
         <h1 style={projectTypography.pageTitle}>{t.projects.pageTitle}</h1>
-        {/* See app/blog/page.tsx: one-word heading, so the list describes
-            itself for screen readers and fetch-only agents. */}
-        <p className="sr-only">{t.projects.metaDescription}</p>
       </header>
 
       <ProjectsGrid initialProjects={initialProjects} />

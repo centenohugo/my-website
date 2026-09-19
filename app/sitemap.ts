@@ -1,43 +1,63 @@
 import type { MetadataRoute } from 'next'
-import { isoDateTime, listPublishedPosts, listPublishedProjects } from '@/lib/content'
+import { sql } from '@/lib/db'
 import { absoluteUrl } from '@/lib/site'
 
-// Regenerated hourly: new posts appear without a redeploy, and the file stays
-// cheap enough that a crawler hitting it repeatedly costs nothing.
+// This is the only complete list of URLs a crawler can get. The listing pages
+// server-render just the first page of cards and load the rest over fetch on
+// scroll, so anything past that page exists in no HTML document on the site.
+// Until that changes, this file is what makes older entries discoverable.
+
+// Regenerate hourly. Without this the route is prerendered once at build time
+// and a post published afterwards never appears.
 export const revalidate = 3600
+
+type Entry = {
+  slug: string
+  published_at: string | null
+  updated_at: string | null
+  image_url: string | null
+}
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl('/'), changeFrequency: 'monthly', priority: 1 },
   { url: absoluteUrl('/blog'), changeFrequency: 'weekly', priority: 0.8 },
   { url: absoluteUrl('/projects'), changeFrequency: 'weekly', priority: 0.8 },
-  { url: absoluteUrl('/about'), changeFrequency: 'yearly', priority: 0.6 },
+  { url: absoluteUrl('/about'), changeFrequency: 'yearly', priority: 0.5 },
 ]
 
+function toEntries(rows: Entry[], prefix: '/blog' | '/projects'): MetadataRoute.Sitemap {
+  return rows.map((row) => ({
+    url: absoluteUrl(`${prefix}/${row.slug}`),
+    lastModified: row.updated_at ?? row.published_at ?? undefined,
+    changeFrequency: 'monthly' as const,
+    priority: 0.7,
+    // An image sitemap entry is the only way these get into Google Images:
+    // they render as CSS background-image, so there is no <img> to crawl.
+    images: row.image_url ? [row.image_url] : undefined,
+  }))
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  let posts: Awaited<ReturnType<typeof listPublishedPosts>> = []
-  let projects: Awaited<ReturnType<typeof listPublishedProjects>> = []
-
   try {
-    ;[posts, projects] = await Promise.all([listPublishedPosts(), listPublishedProjects()])
-  } catch (error) {
-    // A database hiccup should degrade the sitemap to its static routes, not
-    // fail the build or serve a 500 to a crawler.
-    console.error('sitemap: could not list published content', error)
-  }
+    const [posts, projects] = await Promise.all([
+      sql<Entry[]>`
+        select slug, published_at, updated_at, image_url
+        from posts
+        where status = 'published'
+        order by published_at desc
+      `,
+      sql<Entry[]>`
+        select slug, published_at, updated_at, image_url
+        from projects
+        where status = 'published'
+        order by published_at desc
+      `,
+    ])
 
-  return [
-    ...STATIC_ROUTES,
-    ...posts.map((post) => ({
-      url: absoluteUrl(`/blog/${post.slug}`),
-      lastModified: isoDateTime(post.updated_at),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-    ...projects.map((project) => ({
-      url: absoluteUrl(`/projects/${project.slug}`),
-      lastModified: isoDateTime(project.updated_at),
-      changeFrequency: 'monthly' as const,
-      priority: 0.7,
-    })),
-  ]
+    return [...STATIC_ROUTES, ...toEntries(posts, '/blog'), ...toEntries(projects, '/projects')]
+  } catch {
+    // A database hiccup during a revalidate shouldn't serve a broken sitemap or
+    // fail the build; the static routes are always correct.
+    return STATIC_ROUTES
+  }
 }

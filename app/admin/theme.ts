@@ -3,6 +3,16 @@ import { siteColors, siteFonts, siteLayout, siteTypography } from "../theme";
 export const adminColors = siteColors;
 export const adminLayout = siteLayout;
 
+const buttonSecondary = {
+  fontFamily: siteFonts.sans,
+  fontSize: "11px",
+  letterSpacing: "0.1em",
+  color: adminColors.textPrimary,
+  border: `1px solid ${adminColors.tagPlaceholder}`,
+  borderRadius: "3px",
+  padding: "10px 21px",
+} as const;
+
 export const adminTypography = {
   pageTitle: siteTypography.pageTitle,
   label: {
@@ -39,14 +49,14 @@ export const adminTypography = {
     borderRadius: "3px",
     padding: "11px 22px",
   },
-  buttonSecondary: {
-    fontFamily: siteFonts.sans,
-    fontSize: "11px",
-    letterSpacing: "0.1em",
-    color: adminColors.textPrimary,
-    border: `1px solid ${adminColors.tagPlaceholder}`,
-    borderRadius: "3px",
-    padding: "10px 21px",
+  buttonSecondary,
+  // The list row's three actions share one fixed width, so neither a long
+  // title squeezing the column nor a label swap ("Copy link" -> "Copied!")
+  // can change their size from row to row.
+  listAction: {
+    ...buttonSecondary,
+    padding: "10px 0",
+    width: "112px",
   },
   tab: {
     fontFamily: siteFonts.sans,

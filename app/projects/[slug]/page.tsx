@@ -1,56 +1,28 @@
 import type { Metadata } from "next";
-import { cache } from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
-import { excerpt, isoDateTime } from "@/lib/content";
-import { sql } from "@/lib/db";
+import { toExcerpt } from "@/lib/excerpt";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
+import { toIsoString } from "@/lib/publishedDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
-import { absoluteUrl } from "@/lib/site";
+import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES } from "@/lib/site";
+import CoverImage from "../../CoverImage";
 import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
-import { projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
+import { projectColors, projectLayout, projectTypography } from "../theme";
+import { getProject, type ProjectDetail } from "./getProject";
 
-type ProjectDetail = {
-  title: string;
-  subtitle: string | null;
-  content: string;
-  title_es: string | null;
-  subtitle_es: string | null;
-  content_es: string | null;
-  published_at: string | null;
-  updated_at: string;
-  image_url: string | null;
-  stage: ProjectStage;
-  repo_url: string | null;
-  live_url: string | null;
-  status: "draft" | "published";
-};
+type Params = Promise<{ slug: string }>;
+type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
 
-// Shared by generateMetadata and the page so the row is fetched once.
-const getProject = cache(async function getProject(
-  slug: string,
-  shareToken: string | null,
-  isAdmin: boolean
-): Promise<ProjectDetail | null> {
-  const [project] = await sql<ProjectDetail[]>`
-    select title, subtitle, content, title_es, subtitle_es, content_es,
-           published_at, updated_at, image_url, stage, repo_url, live_url, status
-    from projects
-    where slug = ${slug}
-      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
-  `;
-  return project ?? null;
-});
-
-/** Title/subtitle/body in the requested locale, falling back field by field. */
-function localize(project: ProjectDetail, locale: "en" | "es") {
-  const es = locale === "es";
+/** The Spanish column when it exists and Spanish is selected, else the original. */
+function localized(project: ProjectDetail, locale: "en" | "es") {
+  const useEs = locale === "es";
   return {
-    title: es && project.title_es ? project.title_es : project.title,
-    subtitle: es && project.subtitle_es ? project.subtitle_es : project.subtitle,
-    content: es && project.content_es ? project.content_es : project.content,
+    title: useEs && project.title_es ? project.title_es : project.title,
+    subtitle: useEs && project.subtitle_es ? project.subtitle_es : project.subtitle,
+    content: useEs && project.content_es ? project.content_es : project.content,
   };
 }
 
@@ -58,40 +30,44 @@ export async function generateMetadata({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: Params;
+  searchParams: SearchParams;
 }): Promise<Metadata> {
   const { slug } = await params;
-  const { share } = await searchParams;
+  const shareToken = toShareToken((await searchParams).share);
+  const isAdmin = await hasAdminSession();
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const project = await getProject(slug, toShareToken(share), await hasAdminSession());
 
+  const project = await getProject(slug, isAdmin, shareToken);
   if (!project) return {};
 
-  const { title, subtitle, content } = localize(project, locale);
-  const description = subtitle ?? excerpt(content);
-  const canonical = `/projects/${slug}`;
+  const { title, subtitle, content } = localized(project, locale);
+  const description = subtitle || toExcerpt(content);
+  const url = absoluteUrl(`/projects/${slug}`);
 
-  // Share links point at unpublished drafts; keep them out of search indexes.
-  if (share || project.status !== "published") {
-    return { title, description, robots: { index: false, follow: false } };
-  }
+  // A draft is only reachable through a share link or an admin session. Either
+  // way it is not public, so it must never enter an index.
+  const isPublic = project.status === "published" && !shareToken;
 
   return {
     title,
     description,
-    alternates: {
-      canonical,
-      // The Markdown mirror of this write-up, which agents prefer to the page.
-      types: { "text/markdown": `${canonical}.md` },
-    },
+    alternates: { canonical: `/projects/${slug}`, types: { "text/markdown": `/projects/${slug}.md` } },
+    robots: isPublic ? undefined : { index: false, follow: false },
     openGraph: {
       type: "article",
-      url: absoluteUrl(canonical),
+      url,
       title,
       description,
-      publishedTime: isoDateTime(project.published_at),
-      modifiedTime: isoDateTime(project.updated_at),
+      publishedTime: toIsoString(project.published_at),
+      modifiedTime: toIsoString(project.updated_at),
+      authors: [AUTHOR_NAME],
+      images: project.image_url ? [project.image_url] : undefined,
+    },
+    twitter: {
+      card: project.image_url ? "summary_large_image" : "summary",
+      title,
+      description,
       images: project.image_url ? [project.image_url] : undefined,
     },
   };
@@ -101,8 +77,8 @@ export default async function ProjectPage({
   params,
   searchParams,
 }: {
-  params: Promise<{ slug: string }>;
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+  params: Params;
+  searchParams: SearchParams;
 }) {
   const { slug } = await params;
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
@@ -110,52 +86,73 @@ export default async function ProjectPage({
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
 
-  const project = await getProject(slug, shareToken, isAdmin);
+  const project = await getProject(slug, isAdmin, shareToken);
 
   if (!project) {
     notFound();
   }
 
-  const { title, subtitle, content } = localize(project, locale);
+  const { title, subtitle, content } = localized(project, locale);
+  const isPublic = project.status === "published" && !shareToken;
 
   return (
     <main className="pb-16" style={{ paddingTop: projectLayout.headerTopSpace }}>
-      {project.status === "published" && (
-        <JsonLd
-          data={{
-            "@context": "https://schema.org",
-            "@type": "CreativeWork",
-            name: title,
-            description: subtitle ?? excerpt(content),
-            url: absoluteUrl(`/projects/${slug}`),
-            datePublished: isoDateTime(project.published_at),
-            dateModified: isoDateTime(project.updated_at),
-            inLanguage: locale,
-            image: project.image_url ?? undefined,
-            // The stage is a badge on the page; spelled out here so an agent
-            // does not have to guess what the badge attaches to.
-            creativeWorkStatus: t.projects.stages[project.stage],
-            codeRepository: project.repo_url ?? undefined,
-            author: { "@type": "Person", name: t.about.name, url: absoluteUrl("/about") },
-          }}
-        />
+      {isPublic && (
+        <>
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "CreativeWork",
+              "@id": absoluteUrl(`/projects/${slug}#project`),
+              mainEntityOfPage: absoluteUrl(`/projects/${slug}`),
+              name: title,
+              headline: title,
+              description: subtitle || toExcerpt(content),
+              inLanguage: locale,
+              datePublished: toIsoString(project.published_at),
+              dateModified: toIsoString(project.updated_at ?? project.published_at),
+              image: project.image_url ? [project.image_url] : undefined,
+              // The repo and live site are the same work published elsewhere.
+              sameAs: [project.repo_url, project.live_url].filter(Boolean),
+              creativeWorkStatus: t.projects.stages[project.stage],
+              author: {
+                "@type": "Person",
+                name: AUTHOR_NAME,
+                url: absoluteUrl("/about"),
+                sameAs: AUTHOR_PROFILES,
+              },
+            }}
+          />
+          <JsonLd
+            data={{
+              "@context": "https://schema.org",
+              "@type": "BreadcrumbList",
+              itemListElement: [
+                {
+                  "@type": "ListItem",
+                  position: 1,
+                  name: t.nav.projects,
+                  item: absoluteUrl("/projects"),
+                },
+                { "@type": "ListItem", position: 2, name: title },
+              ],
+            }}
+          />
+        </>
       )}
 
       <div className="flex flex-col md:flex-row-reverse">
         <div className="w-full px-[44px] md:w-1/2 md:px-0">
-          <div
+          <CoverImage
+            src={project.image_url}
             className="relative aspect-[3/2] w-full overflow-hidden md:aspect-auto md:h-[85vh]"
-            style={{
-              borderRadius: projectLayout.thumbnailRadius,
-              backgroundColor: project.image_url
-                ? "var(--background)"
-                : projectLayout.thumbnailColor,
-              backgroundImage: project.image_url
-                ? `url(${project.image_url})`
-                : projectLayout.thumbnailPattern,
-              backgroundSize: "cover",
-              backgroundPosition: "center",
-            }}
+            radius={projectLayout.thumbnailRadius}
+            fallbackColor={projectLayout.thumbnailColor}
+            fallbackPattern={projectLayout.thumbnailPattern}
+            // Full width stacked on mobile, half the viewport once the header
+            // splits into two columns at md.
+            sizes="(max-width: 768px) 100vw, 50vw"
+            eager
           />
         </div>
 
@@ -165,13 +162,9 @@ export default async function ProjectPage({
         >
           <div className="flex items-center gap-2">
             <span className="uppercase" style={projectTypography.postDate}>
-              {project.status === "published" ? (
-                <time dateTime={isoDateTime(project.published_at)}>
-                  {formatFullDate(project.published_at, locale)}
-                </time>
-              ) : (
-                t.common.draftBadge
-              )}
+              {project.status === "published"
+                ? formatFullDate(project.published_at, locale)
+                : t.common.draftBadge}
             </span>
             <span className="uppercase" style={projectTypography.stageBadge}>
               {t.projects.stages[project.stage]}
@@ -211,14 +204,14 @@ export default async function ProjectPage({
         </div>
       </div>
 
-      <article
+      <div
         className="mx-auto w-full max-w-3xl"
         style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
       >
         <hr className="my-8" style={{ borderColor: projectColors.dateMono }} />
 
         <MarkdownContent content={content} />
-      </article>
+      </div>
     </main>
   );
 }

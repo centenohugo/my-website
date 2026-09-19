@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
@@ -7,6 +8,11 @@ import { siteColors, siteFonts, siteTypography } from "./theme";
 // Uncovers the straight mouth (see faceGeometry), which the landing face's
 // default slice keeps hidden below the page edge.
 const FACE_VISIBLE_FRAC = 0.78;
+
+export const metadata: Metadata = {
+  title: "404",
+  robots: { index: false, follow: false },
+};
 
 export default async function NotFound() {
   const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);

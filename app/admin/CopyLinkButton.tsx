@@ -37,7 +37,7 @@ export default function CopyLinkButton({
       type="button"
       onClick={handleCopy}
       className="uppercase"
-      style={{ ...adminTypography.buttonSecondary, cursor: "pointer" }}
+      style={{ ...adminTypography.listAction, cursor: "pointer" }}
     >
       {copied ? "Copied!" : "Copy link"}
     </button>

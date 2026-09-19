@@ -1,9 +1,10 @@
-// Canonical origin used to build the absolute URLs that crawlers and AI agents
-// need: metadata, sitemap.xml, robots.txt, llms.txt and JSON-LD.
+// Every absolute URL the site hands to a crawler — canonicals, Open Graph
+// images, sitemap entries, JSON-LD @id values — is built from here.
 //
-// Set NEXT_PUBLIC_SITE_URL once a custom domain exists; on Vercel we fall back
-// to the production deployment URL so preview builds still advertise the real
-// site instead of their own throwaway hostname.
+// The fallback is localhost on purpose. A wrong absolute URL is worse than a
+// missing one: it points canonicals at a domain you don't control. Set
+// NEXT_PUBLIC_SITE_URL in the deployment environment and nowhere else.
+
 const RAW_SITE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ||
   (process.env.VERCEL_PROJECT_PRODUCTION_URL
@@ -12,25 +13,23 @@ const RAW_SITE_URL =
 
 export const SITE_URL = RAW_SITE_URL.replace(/\/+$/, '')
 
-/** Absolute URL for a site-relative path, e.g. absoluteUrl('/blog') */
+/** Absolute URL for a site-relative path, e.g. absoluteUrl('/blog/foo'). */
 export function absoluteUrl(path: string): string {
-  return new URL(path, `${SITE_URL}/`).toString()
+  return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
 }
+
+export const AUTHOR_NAME = 'Hugo Centeno Sanz'
 
 /**
- * The public Markdown mirror of a content page. Every blog post and project is
- * also served as plain Markdown at the same URL with `.md` appended, which is
- * what agents ask for first (see next.config.ts for the rewrite).
+ * Profiles that are unambiguously this person, published as schema.org
+ * `sameAs`. Only add a URL here once it is confirmed real — a wrong sameAs
+ * asserts an identity claim to search engines. (SocialLinks.tsx still carries
+ * a TODO about placeholder profiles; those stay out until it's resolved.)
  */
-export function markdownUrl(path: string): string {
-  return absoluteUrl(`${path}.md`)
-}
+export const AUTHOR_PROFILES = ['https://github.com/centenohugo']
 
 export const SITE_AUTHOR = {
-  name: 'Hugo Centeno Sanz',
+  name: AUTHOR_NAME,
   email: 'hcienteno@gmail.com',
-  sameAs: [
-    'https://github.com/centenohugo',
-    'https://www.linkedin.com/in/hugocentenosanz/',
-  ],
+  sameAs: AUTHOR_PROFILES,
 } as const

@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { cookies } from "next/headers";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { absoluteUrl, SITE_AUTHOR } from "@/lib/site";
+import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
 import JsonLd from "../JsonLd";
 import AboutFlipFace from "./AboutFlipFace";
 import SocialLinks from "./SocialLinks";
@@ -16,9 +16,10 @@ export async function generateMetadata(): Promise<Metadata> {
     alternates: { canonical: "/about" },
     openGraph: {
       type: "profile",
-      url: absoluteUrl("/about"),
-      title: `${t.nav.about} · ${t.meta.title}`,
+      url: "/about",
+      title: `${t.nav.about} — ${t.about.name}`,
       description: t.about.bio,
+      images: ["/me.jpg"],
     },
   };
 }
@@ -36,19 +37,20 @@ export default async function AboutPage() {
         columnGap: aboutLayout.columnGap,
       }}
     >
+      {/* The identity record the rest of the site's author references point at. */}
       <JsonLd
         data={{
           "@context": "https://schema.org",
           "@type": "ProfilePage",
-          url: absoluteUrl("/about"),
-          inLanguage: locale,
           mainEntity: {
             "@type": "Person",
-            name: SITE_AUTHOR.name,
+            "@id": absoluteUrl("/about#person"),
+            name: AUTHOR_NAME,
+            alternateName: t.about.name,
             description: t.about.bio,
-            email: `mailto:${SITE_AUTHOR.email}`,
-            url: absoluteUrl("/about"),
-            sameAs: SITE_AUTHOR.sameAs,
+            url: SITE_URL,
+            image: absoluteUrl("/me.jpg"),
+            sameAs: AUTHOR_PROFILES,
           },
         }}
       />

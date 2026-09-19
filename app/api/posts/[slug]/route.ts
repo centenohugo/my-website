@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { deleteAssetFolder, isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
+import { parseDateInput } from '@/lib/publishedDate'
 import { hasValidSession } from '@/lib/require-session'
 import { slugify } from '@/lib/slug'
 
@@ -58,10 +59,16 @@ export async function PUT(
 
   const newSlug = requestedSlug ? slugify(requestedSlug) : existing.slug
   const newStatus = status ?? existing.status
+  // The admin form always sends published_at, so an explicit value wins here —
+  // including null, which is how emptying the field clears the date. Only when
+  // the key is absent entirely do we fall back to stamping on first publish.
+  const suppliedDate = parseDateInput(body.published_at)
   const publishedAt =
-    newStatus === 'published' && existing.status !== 'published'
-      ? new Date()
-      : existing.published_at
+    suppliedDate !== undefined
+      ? suppliedDate
+      : newStatus === 'published' && existing.status !== 'published'
+        ? new Date()
+        : existing.published_at
 
   try {
     const [updated] = await sql`
