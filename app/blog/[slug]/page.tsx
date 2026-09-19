@@ -52,7 +52,7 @@ export async function generateMetadata({
   return {
     title,
     description,
-    alternates: { canonical: `/blog/${slug}` },
+    alternates: { canonical: `/blog/${slug}`, types: { "text/markdown": `/blog/${slug}.md` } },
     robots: isPublic ? undefined : { index: false, follow: false },
     openGraph: {
       type: "article",

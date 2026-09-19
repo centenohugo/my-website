@@ -5,7 +5,11 @@
 // missing one: it points canonicals at a domain you don't control. Set
 // NEXT_PUBLIC_SITE_URL in the deployment environment and nowhere else.
 
-const RAW_SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'
+const RAW_SITE_URL =
+  process.env.NEXT_PUBLIC_SITE_URL ||
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : 'http://localhost:3000')
 
 export const SITE_URL = RAW_SITE_URL.replace(/\/+$/, '')
 
@@ -23,3 +27,9 @@ export const AUTHOR_NAME = 'Hugo Centeno Sanz'
  * a TODO about placeholder profiles; those stay out until it's resolved.)
  */
 export const AUTHOR_PROFILES = ['https://github.com/centenohugo']
+
+export const SITE_AUTHOR = {
+  name: AUTHOR_NAME,
+  email: 'hcienteno@gmail.com',
+  sameAs: AUTHOR_PROFILES,
+} as const

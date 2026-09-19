@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Piazzolla, Inter } from "next/font/google";
 import { cookies } from "next/headers";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { AUTHOR_NAME, SITE_URL } from "@/lib/site";
+import { absoluteUrl, AUTHOR_NAME, SITE_URL } from "@/lib/site";
 import { LocaleProvider } from "@/lib/i18n/LocaleProvider";
 import Footer from "./Footer";
 import InternalNavTracker from "./InternalNavTracker";
@@ -67,6 +67,14 @@ export default async function RootLayout({
       lang={locale}
       className={`${piazzolla.variable} ${inter.variable} h-full antialiased`}
     >
+      <head>
+        <link
+          rel="alternate"
+          type="text/plain"
+          href={absoluteUrl("/llms.txt")}
+          title="llms.txt"
+        />
+      </head>
       <body className="min-h-full flex flex-col">
         <LocaleProvider initialLocale={locale}>
           <InternalNavTracker />
