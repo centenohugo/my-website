@@ -1,10 +1,14 @@
 import type { Metadata } from "next";
+import { cache } from "react";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
+import { excerpt, isoDateTime } from "@/lib/content";
 import { sql } from "@/lib/db";
 import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
+import { absoluteUrl } from "@/lib/site";
+import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
 import { projectColors, projectLayout, projectTypography, type ProjectStage } from "../theme";
 
@@ -16,6 +20,7 @@ type ProjectDetail = {
   subtitle_es: string | null;
   content_es: string | null;
   published_at: string | null;
+  updated_at: string;
   image_url: string | null;
   stage: ProjectStage;
   repo_url: string | null;
@@ -23,14 +28,73 @@ type ProjectDetail = {
   status: "draft" | "published";
 };
 
+// Shared by generateMetadata and the page so the row is fetched once.
+const getProject = cache(async function getProject(
+  slug: string,
+  shareToken: string | null,
+  isAdmin: boolean
+): Promise<ProjectDetail | null> {
+  const [project] = await sql<ProjectDetail[]>`
+    select title, subtitle, content, title_es, subtitle_es, content_es,
+           published_at, updated_at, image_url, stage, repo_url, live_url, status
+    from projects
+    where slug = ${slug}
+      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
+  `;
+  return project ?? null;
+});
+
+/** Title/subtitle/body in the requested locale, falling back field by field. */
+function localize(project: ProjectDetail, locale: "en" | "es") {
+  const es = locale === "es";
+  return {
+    title: es && project.title_es ? project.title_es : project.title,
+    subtitle: es && project.subtitle_es ? project.subtitle_es : project.subtitle,
+    content: es && project.content_es ? project.content_es : project.content,
+  };
+}
+
 export async function generateMetadata({
+  params,
   searchParams,
 }: {
+  params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }): Promise<Metadata> {
-  // Share links point at unpublished drafts; keep them out of search indexes.
+  const { slug } = await params;
   const { share } = await searchParams;
-  return share ? { robots: { index: false, follow: false } } : {};
+  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
+  const project = await getProject(slug, toShareToken(share), await hasAdminSession());
+
+  if (!project) return {};
+
+  const { title, subtitle, content } = localize(project, locale);
+  const description = subtitle ?? excerpt(content);
+  const canonical = `/projects/${slug}`;
+
+  // Share links point at unpublished drafts; keep them out of search indexes.
+  if (share || project.status !== "published") {
+    return { title, description, robots: { index: false, follow: false } };
+  }
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical,
+      // The Markdown mirror of this write-up, which agents prefer to the page.
+      types: { "text/markdown": `${canonical}.md` },
+    },
+    openGraph: {
+      type: "article",
+      url: absoluteUrl(canonical),
+      title,
+      description,
+      publishedTime: isoDateTime(project.published_at),
+      modifiedTime: isoDateTime(project.updated_at),
+      images: project.image_url ? [project.image_url] : undefined,
+    },
+  };
 }
 
 export default async function ProjectPage({
@@ -46,25 +110,37 @@ export default async function ProjectPage({
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
 
-  const [project] = await sql<ProjectDetail[]>`
-    select title, subtitle, content, title_es, subtitle_es, content_es, published_at, image_url, stage, repo_url, live_url, status
-    from projects
-    where slug = ${slug}
-      and (status = 'published' or ${isAdmin} or share_token = ${shareToken})
-  `;
+  const project = await getProject(slug, shareToken, isAdmin);
 
   if (!project) {
     notFound();
   }
 
-  const title = locale === "es" && project.title_es ? project.title_es : project.title;
-  const subtitle =
-    locale === "es" && project.subtitle_es ? project.subtitle_es : project.subtitle;
-  const content =
-    locale === "es" && project.content_es ? project.content_es : project.content;
+  const { title, subtitle, content } = localize(project, locale);
 
   return (
     <main className="pb-16" style={{ paddingTop: projectLayout.headerTopSpace }}>
+      {project.status === "published" && (
+        <JsonLd
+          data={{
+            "@context": "https://schema.org",
+            "@type": "CreativeWork",
+            name: title,
+            description: subtitle ?? excerpt(content),
+            url: absoluteUrl(`/projects/${slug}`),
+            datePublished: isoDateTime(project.published_at),
+            dateModified: isoDateTime(project.updated_at),
+            inLanguage: locale,
+            image: project.image_url ?? undefined,
+            // The stage is a badge on the page; spelled out here so an agent
+            // does not have to guess what the badge attaches to.
+            creativeWorkStatus: t.projects.stages[project.stage],
+            codeRepository: project.repo_url ?? undefined,
+            author: { "@type": "Person", name: t.about.name, url: absoluteUrl("/about") },
+          }}
+        />
+      )}
+
       <div className="flex flex-col md:flex-row-reverse">
         <div className="w-full px-[44px] md:w-1/2 md:px-0">
           <div
@@ -89,9 +165,13 @@ export default async function ProjectPage({
         >
           <div className="flex items-center gap-2">
             <span className="uppercase" style={projectTypography.postDate}>
-              {project.status === "published"
-                ? formatFullDate(project.published_at, locale)
-                : t.common.draftBadge}
+              {project.status === "published" ? (
+                <time dateTime={isoDateTime(project.published_at)}>
+                  {formatFullDate(project.published_at, locale)}
+                </time>
+              ) : (
+                t.common.draftBadge
+              )}
             </span>
             <span className="uppercase" style={projectTypography.stageBadge}>
               {t.projects.stages[project.stage]}
@@ -131,14 +211,14 @@ export default async function ProjectPage({
         </div>
       </div>
 
-      <div
+      <article
         className="mx-auto w-full max-w-3xl"
         style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
       >
         <hr className="my-8" style={{ borderColor: projectColors.dateMono }} />
 
         <MarkdownContent content={content} />
-      </div>
+      </article>
     </main>
   );
 }

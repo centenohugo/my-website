@@ -15,7 +15,8 @@
   },
   "blog": {
     "pageTitle": "Blog",
-    "loadingMore": "Loading more ·"
+    "loadingMore": "Loading more ·",
+    "metaDescription": "Posts by Hugo Centeno Sanz on what he is building, learning and reading."
   },
   "about": {
     "name": "Hugo Centeno Sanz",
@@ -32,6 +33,7 @@
       "in_progress": "In progress",
       "completed": "Completed",
       "archived": "Archived"
-    }
+    },
+    "metaDescription": "Things Hugo Centeno Sanz has built, each with a short write-up, its stage and links to the code."
   }
 }

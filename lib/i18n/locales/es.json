@@ -15,7 +15,8 @@
   },
   "blog": {
     "pageTitle": "Blog",
-    "loadingMore": "Cargando más ·"
+    "loadingMore": "Cargando más ·",
+    "metaDescription": "Entradas de Hugo Centeno Sanz sobre lo que construye, aprende y lee."
   },
   "about": {
     "name": "Hugo Centeno Sanz",
@@ -32,6 +33,7 @@
       "in_progress": "En progreso",
       "completed": "Completado",
       "archived": "Archivado"
-    }
+    },
+    "metaDescription": "Cosas que ha construido Hugo Centeno Sanz, cada una con su resumen, su estado y enlaces al código."
   }
 }
