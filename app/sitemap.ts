@@ -19,10 +19,8 @@ type Entry = {
 }
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
-  { url: absoluteUrl('/'), changeFrequency: 'monthly', priority: 1 },
+  { url: absoluteUrl('/'), changeFrequency: 'weekly', priority: 1 },
   { url: absoluteUrl('/blog'), changeFrequency: 'weekly', priority: 0.8 },
-  { url: absoluteUrl('/projects'), changeFrequency: 'weekly', priority: 0.8 },
-  { url: absoluteUrl('/about'), changeFrequency: 'yearly', priority: 0.5 },
 ]
 
 function toEntries(rows: Entry[], prefix: '/blog' | '/projects'): MetadataRoute.Sitemap {

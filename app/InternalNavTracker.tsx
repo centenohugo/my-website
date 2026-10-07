@@ -26,9 +26,9 @@ export default function InternalNavTracker() {
       previousPathname.current = pathname;
       return;
     }
-    // parentPath may carry a query (/admin?tab=projects); previousPathname
-    // never does, so compare pathnames only.
-    const parent = parentPath(pathname)?.split("?")[0] ?? null;
+    // parentPath may carry a query (/admin?tab=projects) or a hash
+    // (/#projects); previousPathname never does, so compare pathnames only.
+    const parent = parentPath(pathname)?.split(/[?#]/)[0] ?? null;
     sessionStorage.setItem(
       backEligibleKey(pathname),
       previousPathname.current === parent ? "1" : "0"

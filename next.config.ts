@@ -1,6 +1,14 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  async redirects() {
+    // About became the home page and the project list lives below it; keep
+    // old links and bookmarks working.
+    return [
+      { source: "/about", destination: "/", permanent: true },
+      { source: "/projects", destination: "/#projects", permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       { source: "/blog/:slug.md", destination: "/markdown/blog/:slug" },

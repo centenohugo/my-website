@@ -25,7 +25,7 @@ export async function GET() {
     `# ${SITE_AUTHOR.name}`,
     '',
     `> Personal site of ${SITE_AUTHOR.name}, an engineering student who writes about what he builds.`,
-    `> It holds a blog, a set of project write-ups and an about page. Nothing else: there is no`,
+    `> It holds an about page with the project write-ups below it, and a blog. Nothing else: there is no`,
     `> product, no pricing and no public API.`,
     '',
     'Every post and project is also served as plain Markdown at the same URL with `.md` appended',
@@ -34,10 +34,8 @@ export async function GET() {
     '',
     '## Pages',
     '',
-    `- [Home](${absoluteUrl('/')}): the three sections of the site.`,
+    `- [Home](${absoluteUrl('/')}): who ${SITE_AUTHOR.name} is, plus contact and social links, followed by every published project with its stage.`,
     `- [Blog](${absoluteUrl('/blog')}): every published post, newest first.`,
-    `- [Projects](${absoluteUrl('/projects')}): project write-ups with their stage and links.`,
-    `- [About](${absoluteUrl('/about')}): who ${SITE_AUTHOR.name} is, plus contact and social links.`,
     '',
   ]
 
