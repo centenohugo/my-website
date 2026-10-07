@@ -6,7 +6,6 @@ import DoodleFace from "./DoodleFace";
 export default function Footer() {
   const pathname = usePathname();
   const hidden =
-    pathname === "/" ||
     pathname === "/admin" ||
     pathname.startsWith("/admin/") ||
     pathname === "/login" ||
