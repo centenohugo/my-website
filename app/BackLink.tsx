@@ -26,7 +26,8 @@ export default function BackLink() {
     return (
       <Link
         href={fallbackHref}
-        scroll={false}
+        // a hash target (/#projects) needs Next's scroll to reach the section
+        scroll={fallbackHref.includes("#")}
         className="uppercase"
         style={siteTypography.backLink}
       >

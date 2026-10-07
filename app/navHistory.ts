@@ -9,6 +9,8 @@ export function parentPath(pathname: string): string | null {
   if (pathname.startsWith("/admin/")) {
     return pathname.startsWith("/admin/projects/") ? "/admin?tab=projects" : "/admin";
   }
+  // The project list is a section of the home page, not a page of its own.
+  if (pathname.startsWith("/projects/")) return "/#projects";
   const segments = pathname.replace(/\/+$/, "").split("/").filter(Boolean);
   const parentSegments = segments.slice(0, -1);
   return parentSegments.length === 0 ? "/" : `/${parentSegments.join("/")}`;

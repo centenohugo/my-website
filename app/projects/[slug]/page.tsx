@@ -6,7 +6,7 @@ import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
 import { formatFullDate } from "@/lib/i18n/formatDate";
 import { toIsoString } from "@/lib/publishedDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
-import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES } from "@/lib/site";
+import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
 import CoverImage from "../../CoverImage";
 import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
@@ -118,7 +118,7 @@ export default async function ProjectPage({
               author: {
                 "@type": "Person",
                 name: AUTHOR_NAME,
-                url: absoluteUrl("/about"),
+                url: SITE_URL,
                 sameAs: AUTHOR_PROFILES,
               },
             }}
@@ -132,7 +132,7 @@ export default async function ProjectPage({
                   "@type": "ListItem",
                   position: 1,
                   name: t.nav.projects,
-                  item: absoluteUrl("/projects"),
+                  item: absoluteUrl("/#projects"),
                 },
                 { "@type": "ListItem", position: 2, name: title },
               ],

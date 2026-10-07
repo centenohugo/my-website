@@ -114,7 +114,7 @@ export default async function PostPage({
               author: {
                 "@type": "Person",
                 name: AUTHOR_NAME,
-                url: absoluteUrl("/about"),
+                url: SITE_URL,
                 sameAs: AUTHOR_PROFILES,
               },
               publisher: {
