@@ -1,9 +1,6 @@
 import type { Metadata } from "next";
-import { Piazzolla, Inter } from "next/font/google";
-import t from "@/lib/copy";
 import { IBM_Plex_Mono, Piazzolla, Inter } from "next/font/google";
-import { cookies } from "next/headers";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import t from "@/lib/copy";
 import { absoluteUrl, AUTHOR_NAME, SITE_URL } from "@/lib/site";
 import Footer from "./Footer";
 import InternalNavTracker from "./InternalNavTracker";
@@ -18,6 +15,12 @@ const piazzolla = Piazzolla({
 
 const inter = Inter({
   variable: "--font-site-sans",
+  subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-site-mono",
   subsets: ["latin"],
   weight: ["400", "500"],
 });
@@ -61,7 +64,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${piazzolla.variable} ${inter.variable} h-full antialiased`}
+      className={`${piazzolla.variable} ${inter.variable} ${plexMono.variable} h-full antialiased`}
     >
       <head>
         <link
