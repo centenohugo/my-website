@@ -6,9 +6,6 @@ export type ProjectDetail = {
   title: string
   subtitle: string | null
   content: string
-  title_es: string | null
-  subtitle_es: string | null
-  content_es: string | null
   // timestamptz comes back from the driver as a Date, not a string.
   published_at: Date | null
   updated_at: Date | null
@@ -26,7 +23,7 @@ export const getProject = cache(async function getProject(
   shareToken: string | null
 ): Promise<ProjectDetail | null> {
   const [project] = await sql<ProjectDetail[]>`
-    select title, subtitle, content, title_es, subtitle_es, content_es,
+    select title, subtitle, content,
            published_at, updated_at, image_url, stage, repo_url, live_url, status
     from projects
     where slug = ${slug}

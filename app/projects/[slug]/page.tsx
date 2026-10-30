@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import { toExcerpt } from "@/lib/excerpt";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { formatFullDate } from "@/lib/i18n/formatDate";
+import t from "@/lib/copy";
+import { formatFullDate } from "@/lib/formatDate";
 import { toIsoString } from "@/lib/publishedDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
 import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
@@ -11,20 +10,10 @@ import CoverImage from "../../CoverImage";
 import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
 import { projectColors, projectLayout, projectTypography } from "../theme";
-import { getProject, type ProjectDetail } from "./getProject";
+import { getProject } from "./getProject";
 
 type Params = Promise<{ slug: string }>;
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-/** The Spanish column when it exists and Spanish is selected, else the original. */
-function localized(project: ProjectDetail, locale: "en" | "es") {
-  const useEs = locale === "es";
-  return {
-    title: useEs && project.title_es ? project.title_es : project.title,
-    subtitle: useEs && project.subtitle_es ? project.subtitle_es : project.subtitle,
-    content: useEs && project.content_es ? project.content_es : project.content,
-  };
-}
 
 export async function generateMetadata({
   params,
@@ -36,12 +25,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
 
   const project = await getProject(slug, isAdmin, shareToken);
   if (!project) return {};
 
-  const { title, subtitle, content } = localized(project, locale);
+  const { title, subtitle, content } = project;
   const description = subtitle || toExcerpt(content);
   const url = absoluteUrl(`/projects/${slug}`);
 
@@ -81,8 +69,6 @@ export default async function ProjectPage({
   searchParams: SearchParams;
 }) {
   const { slug } = await params;
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
 
@@ -92,7 +78,7 @@ export default async function ProjectPage({
     notFound();
   }
 
-  const { title, subtitle, content } = localized(project, locale);
+  const { title, subtitle, content } = project;
   const isPublic = project.status === "published" && !shareToken;
 
   return (
@@ -108,7 +94,7 @@ export default async function ProjectPage({
               name: title,
               headline: title,
               description: subtitle || toExcerpt(content),
-              inLanguage: locale,
+              inLanguage: "en",
               datePublished: toIsoString(project.published_at),
               dateModified: toIsoString(project.updated_at ?? project.published_at),
               image: project.image_url ? [project.image_url] : undefined,
@@ -163,7 +149,7 @@ export default async function ProjectPage({
           <div className="flex items-center gap-2">
             <span className="uppercase" style={projectTypography.postDate}>
               {project.status === "published"
-                ? formatFullDate(project.published_at, locale)
+                ? formatFullDate(project.published_at)
                 : t.common.draftBadge}
             </span>
             <span className="uppercase" style={projectTypography.stageBadge}>

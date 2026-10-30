@@ -16,9 +16,6 @@ export type DraftSnapshot = {
   repoUrl: string;
   liveUrl: string;
   stage: ContentStage;
-  titleEs: string;
-  subtitleEs: string;
-  contentEs: string;
   assetPrefix: string;
 };
 
@@ -31,7 +28,7 @@ export type StoredDraft = {
 // Bumped whenever DraftSnapshot changes shape. Older payloads are dropped
 // rather than migrated — a stale recovery offer is worth less than the risk of
 // restoring half a form.
-const VERSION = 1;
+const VERSION = 2;
 
 /**
  * One slot per form identity: the new-post form, plus one per existing slug.
@@ -61,9 +58,6 @@ export function baselineSnapshot(
     repoUrl: initialData?.repo_url ?? "",
     liveUrl: initialData?.live_url ?? "",
     stage: initialData?.stage ?? "in_progress",
-    titleEs: initialData?.title_es ?? "",
-    subtitleEs: initialData?.subtitle_es ?? "",
-    contentEs: initialData?.content_es ?? "",
     assetPrefix,
   };
 }

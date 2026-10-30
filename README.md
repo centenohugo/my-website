@@ -26,8 +26,7 @@ with no JavaScript needed.
 - `/blog/<slug>.md` and `/projects/<slug>.md` — plain-Markdown mirrors of every
   published entry, with YAML front matter. They are rewrites (`next.config.ts`)
   onto `app/markdown/[kind]/[slug]/route.ts`, and each HTML page advertises its
-  mirror with `<link rel="alternate" type="text/markdown">`. Add `?lang=es` for
-  the Spanish version where one exists.
+  mirror with `<link rel="alternate" type="text/markdown">`.
 - JSON-LD (`app/JsonLd.tsx`) on the home, about, post and project pages.
 
 `NEXT_PUBLIC_SITE_URL` drives every absolute URL in that list — see

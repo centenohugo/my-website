@@ -23,9 +23,6 @@ export type ContentFormInitialData = {
   repo_url?: string | null;
   live_url?: string | null;
   stage?: ContentStage;
-  title_es?: string | null;
-  subtitle_es?: string | null;
-  content_es?: string | null;
   asset_prefix?: string | null;
 };
 
@@ -122,15 +119,6 @@ export default function ContentForm({
   // restore that swaps it in reads as a change.
   const [mountedAssetPrefix] = useState(assetPrefix);
 
-  const [titleEs, setTitleEs] = useState(initialData?.title_es ?? "");
-  const [subtitleEs, setSubtitleEs] = useState(initialData?.subtitle_es ?? "");
-  const [contentEs, setContentEs] = useState(initialData?.content_es ?? "");
-  const [esTab, setEsTab] = useState<"write" | "preview">("write");
-  const [translating, setTranslating] = useState(false);
-  const [translateError, setTranslateError] = useState<string | null>(null);
-  const [translationModel, setTranslationModel] = useState<string | null>(null);
-  const [translationMs, setTranslationMs] = useState<number | null>(null);
-
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inlineFileInputRef = useRef<HTMLInputElement>(null);
   const heroFileInputRef = useRef<HTMLInputElement>(null);
@@ -146,9 +134,6 @@ export default function ContentForm({
       repoUrl,
       liveUrl,
       stage,
-      titleEs,
-      subtitleEs,
-      contentEs,
       assetPrefix,
     }),
     [
@@ -161,9 +146,6 @@ export default function ContentForm({
       repoUrl,
       liveUrl,
       stage,
-      titleEs,
-      subtitleEs,
-      contentEs,
       assetPrefix,
     ]
   );
@@ -197,9 +179,6 @@ export default function ContentForm({
     setRepoUrl(recovered.repoUrl);
     setLiveUrl(recovered.liveUrl);
     setStage(recovered.stage);
-    setTitleEs(recovered.titleEs);
-    setSubtitleEs(recovered.subtitleEs);
-    setContentEs(recovered.contentEs);
     setAssetPrefix(recovered.assetPrefix);
     dismissRecovered();
   }
@@ -276,34 +255,6 @@ export default function ContentForm({
     insertAtCursor(`![${caption ?? ""}](${url})`);
   }
 
-  async function handleTranslate() {
-    setTranslating(true);
-    setTranslateError(null);
-    setTranslationModel(null);
-    setTranslationMs(null);
-
-    const res = await fetch("/api/translate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, subtitle: subtitle || null, content }),
-    });
-
-    setTranslating(false);
-
-    if (!res.ok) {
-      const data = await res.json().catch(() => null);
-      setTranslateError(data?.error ?? "Translation failed");
-      return;
-    }
-
-    const data = await res.json();
-    setTitleEs(data.title_es ?? "");
-    setSubtitleEs(data.subtitle_es ?? "");
-    setContentEs(data.content_es ?? "");
-    setTranslationModel(data.model ?? null);
-    setTranslationMs(typeof data.duration_ms === "number" ? data.duration_ms : null);
-  }
-
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setSubmitting(true);
@@ -317,9 +268,6 @@ export default function ContentForm({
       published_at: date || null,
       image_url: imageUrl || null,
       asset_prefix: assetPrefix,
-      title_es: titleEs || null,
-      subtitle_es: subtitleEs || null,
-      content_es: contentEs || null,
       ...(kind === "project"
         ? { repo_url: repoUrl || null, live_url: liveUrl || null, stage }
         : {}),
@@ -588,99 +536,6 @@ export default function ContentForm({
           }}
         >
           <MarkdownContent content={content} />
-        </div>
-      </div>
-
-      <div
-        className="flex flex-col gap-4"
-        style={{ width: "1200px", maxWidth: "calc(100vw - 88px)" }}
-      >
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={handleTranslate}
-            disabled={translating || !title || !content}
-            className="w-fit uppercase"
-            style={adminTypography.buttonPrimary}
-          >
-            {translating ? "Translating…" : "Generate Spanish translation"}
-          </button>
-          {translateError && (
-            <span style={{ ...adminTypography.label, color: "#a24b3f" }}>
-              {translateError}
-            </span>
-          )}
-          {translationModel && (
-            <span style={adminTypography.label}>
-              Translated by {translationModel}
-              {translationMs !== null &&
-                ` · ${(translationMs / 1000).toFixed(1)}s`}
-            </span>
-          )}
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="uppercase" style={adminTypography.label}>
-            Title (ES)
-          </span>
-          <input
-            type="text"
-            value={titleEs}
-            onChange={(event) => setTitleEs(event.target.value)}
-            style={adminTypography.input}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="uppercase" style={adminTypography.label}>
-            Subtitle (ES)
-          </span>
-          <input
-            type="text"
-            value={subtitleEs}
-            onChange={(event) => setSubtitleEs(event.target.value)}
-            style={adminTypography.input}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <div className="flex items-center gap-4">
-            <button
-              type="button"
-              onClick={() => setEsTab("write")}
-              className="uppercase"
-              style={esTab === "write" ? adminTypography.tabActive : adminTypography.tab}
-            >
-              Write
-            </button>
-            <button
-              type="button"
-              onClick={() => setEsTab("preview")}
-              className="uppercase"
-              style={esTab === "preview" ? adminTypography.tabActive : adminTypography.tab}
-            >
-              Preview
-            </button>
-          </div>
-
-          <div style={{ display: esTab === "write" ? "block" : "none" }}>
-            <textarea
-              value={contentEs}
-              onChange={(event) => setContentEs(event.target.value)}
-              style={{ ...adminTypography.textarea, height: EDITOR_HEIGHT, width: "100%", resize: "vertical" }}
-            />
-          </div>
-
-          <div
-            style={{
-              ...adminTypography.textarea,
-              height: EDITOR_HEIGHT,
-              overflowY: "auto",
-              display: esTab === "preview" ? "block" : "none",
-            }}
-          >
-            <MarkdownContent content={contentEs} />
-          </div>
         </div>
       </div>
 

@@ -1,6 +1,5 @@
 import { cache } from 'react'
 import { sql } from './db'
-import type { Locale } from './i18n/dictionary'
 
 export type ContentKind = 'blog' | 'projects'
 
@@ -15,8 +14,6 @@ export type PublishedEntry = {
   slug: string
   title: string
   subtitle: string | null
-  title_es: string | null
-  subtitle_es: string | null
   published_at: string | null
   updated_at: string
 }
@@ -27,7 +24,7 @@ export type PublishedProject = PublishedEntry & { stage: string }
 // entries without worrying about which other component already asked.
 export const listPublishedPosts = cache(async (): Promise<PublishedEntry[]> => {
   return sql<PublishedEntry[]>`
-    select slug, title, subtitle, title_es, subtitle_es, published_at, updated_at
+    select slug, title, subtitle, published_at, updated_at
     from posts
     where status = 'published'
     order by published_at desc nulls last
@@ -36,7 +33,7 @@ export const listPublishedPosts = cache(async (): Promise<PublishedEntry[]> => {
 
 export const listPublishedProjects = cache(async (): Promise<PublishedProject[]> => {
   return sql<PublishedProject[]>`
-    select slug, title, subtitle, title_es, subtitle_es, published_at, updated_at, stage
+    select slug, title, subtitle, published_at, updated_at, stage
     from projects
     where status = 'published'
     order by published_at desc nulls last
@@ -55,53 +52,28 @@ export type ContentDoc = {
   stage: string | null
 }
 
-type RawDoc = ContentDoc & {
-  title_es: string | null
-  subtitle_es: string | null
-  content_es: string | null
-}
-
 export const getPublishedDoc = cache(
-  async (kind: ContentKind, slug: string, locale: Locale): Promise<ContentDoc | null> => {
+  async (kind: ContentKind, slug: string): Promise<ContentDoc | null> => {
     // Two literal queries instead of an interpolated table name: the column
     // lists differ and the kind never reaches the database as a value.
     const [row] =
       kind === 'blog'
-        ? await sql<RawDoc[]>`
-            select title, subtitle, content, title_es, subtitle_es, content_es,
+        ? await sql<ContentDoc[]>`
+            select title, subtitle, content,
                    published_at, updated_at, null as repo_url, null as live_url, null as stage
             from posts
             where slug = ${slug} and status = 'published'
           `
-        : await sql<RawDoc[]>`
-            select title, subtitle, content, title_es, subtitle_es, content_es,
+        : await sql<ContentDoc[]>`
+            select title, subtitle, content,
                    published_at, updated_at, repo_url, live_url, stage
             from projects
             where slug = ${slug} and status = 'published'
           `
 
-    if (!row) return null
-
-    // Spanish is a partial translation: fall back field by field, never mixing
-    // a translated title onto an untranslated body without saying so.
-    const es = locale === 'es'
-    return {
-      ...row,
-      title: es && row.title_es ? row.title_es : row.title,
-      subtitle: es && row.subtitle_es ? row.subtitle_es : row.subtitle,
-      content: es && row.content_es ? row.content_es : row.content,
-    }
+    return row ?? null
   }
 )
-
-/** Picks the localized title/subtitle for a listing row. */
-export function localizeEntry(entry: PublishedEntry, locale: Locale) {
-  const es = locale === 'es'
-  return {
-    title: es && entry.title_es ? entry.title_es : entry.title,
-    subtitle: es && entry.subtitle_es ? entry.subtitle_es : entry.subtitle,
-  }
-}
 
 /**
  * A plain-text summary for meta descriptions, built from the body when an

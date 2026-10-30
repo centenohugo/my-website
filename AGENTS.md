@@ -13,7 +13,7 @@ months ago can be backdated into its real place — public listings sort by this
 column, so a backdated article sorts chronologically rather than to the top.
 
 It is a calendar day, not an instant: `lib/publishedDate.ts` stores it at
-midnight UTC and `lib/i18n/formatDate.ts` renders it with `timeZone: "UTC"`.
+midnight UTC and `lib/formatDate.ts` renders it with `timeZone: "UTC"`.
 Keep both ends pinned. The cards are client components and the detail pages are
 server components, so an unpinned format mismatches on hydration and shows a
 date stored on the 1st as the previous month to any visitor west of UTC.

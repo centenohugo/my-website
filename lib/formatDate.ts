@@ -1,19 +1,15 @@
-import type { Locale } from "./dictionary";
-
-function localeTag(locale: Locale) {
-  return locale === "es" ? "es-ES" : "en-US";
-}
+const LOCALE_TAG = "en-US";
 
 // published_at is a calendar day, not a moment, so both formatters pin the
 // timezone to UTC. Without this the cards (client components) render in the
 // visitor's timezone while the detail pages (server components) render in the
 // server's, which both mismatches on hydration and shows a date stored at
 // midnight as the previous day — and therefore the previous month, on cards.
-export function formatCardDate(published_at: string | Date | null, locale: Locale) {
+export function formatCardDate(published_at: string | Date | null) {
   if (!published_at) return "";
   const date = new Date(published_at);
   return date
-    .toLocaleDateString(localeTag(locale), {
+    .toLocaleDateString(LOCALE_TAG, {
       month: "short",
       year: "numeric",
       timeZone: "UTC",
@@ -22,11 +18,11 @@ export function formatCardDate(published_at: string | Date | null, locale: Local
     .replace(".", "");
 }
 
-export function formatFullDate(published_at: string | Date | null, locale: Locale) {
+export function formatFullDate(published_at: string | Date | null) {
   if (!published_at) return "";
   const date = new Date(published_at);
   return date
-    .toLocaleDateString(localeTag(locale), {
+    .toLocaleDateString(LOCALE_TAG, {
       day: "numeric",
       month: "long",
       year: "numeric",

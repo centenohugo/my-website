@@ -1,9 +1,8 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { cookies } from "next/headers";
 import { toExcerpt } from "@/lib/excerpt";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { formatFullDate } from "@/lib/i18n/formatDate";
+import t from "@/lib/copy";
+import { formatFullDate } from "@/lib/formatDate";
 import { toIsoString } from "@/lib/publishedDate";
 import { hasAdminSession, toShareToken } from "@/lib/share";
 import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
@@ -11,20 +10,10 @@ import CoverImage from "../../CoverImage";
 import JsonLd from "../../JsonLd";
 import MarkdownContent from "../../MarkdownContent";
 import { blogColors, blogLayout, blogTypography } from "../theme";
-import { getPost, type PostDetail } from "./getPost";
+import { getPost } from "./getPost";
 
 type Params = Promise<{ slug: string }>;
 type SearchParams = Promise<{ [key: string]: string | string[] | undefined }>;
-
-/** The Spanish column when it exists and Spanish is selected, else the original. */
-function localized(post: PostDetail, locale: "en" | "es") {
-  const useEs = locale === "es";
-  return {
-    title: useEs && post.title_es ? post.title_es : post.title,
-    subtitle: useEs && post.subtitle_es ? post.subtitle_es : post.subtitle,
-    content: useEs && post.content_es ? post.content_es : post.content,
-  };
-}
 
 export async function generateMetadata({
   params,
@@ -36,12 +25,11 @@ export async function generateMetadata({
   const { slug } = await params;
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
 
   const post = await getPost(slug, isAdmin, shareToken);
   if (!post) return {};
 
-  const { title, subtitle, content } = localized(post, locale);
+  const { title, subtitle, content } = post;
   const description = subtitle || toExcerpt(content);
   const url = absoluteUrl(`/blog/${slug}`);
 
@@ -81,8 +69,6 @@ export default async function PostPage({
   searchParams: SearchParams;
 }) {
   const { slug } = await params;
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
   const shareToken = toShareToken((await searchParams).share);
   const isAdmin = await hasAdminSession();
 
@@ -92,7 +78,7 @@ export default async function PostPage({
     notFound();
   }
 
-  const { title, subtitle, content } = localized(post, locale);
+  const { title, subtitle, content } = post;
   const isPublic = post.status === "published" && !shareToken;
 
   return (
@@ -107,7 +93,7 @@ export default async function PostPage({
               mainEntityOfPage: absoluteUrl(`/blog/${slug}`),
               headline: title,
               description: subtitle || toExcerpt(content),
-              inLanguage: locale,
+              inLanguage: "en",
               datePublished: toIsoString(post.published_at),
               dateModified: toIsoString(post.updated_at ?? post.published_at),
               image: post.image_url ? [post.image_url] : undefined,
@@ -158,7 +144,7 @@ export default async function PostPage({
         >
           <span className="uppercase" style={blogTypography.postDate}>
             {post.status === "published"
-              ? formatFullDate(post.published_at, locale)
+              ? formatFullDate(post.published_at)
               : t.common.draftBadge}
           </span>
           <h1 style={{ ...blogTypography.postTitle, textWrap: "pretty" }}>{title}</h1>

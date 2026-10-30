@@ -17,7 +17,6 @@ async function errorFrom(res: Response, fallback: string) {
 /** The landing's bio and photo, which the home page reads from site_profile. */
 export default function LandingForm({ initialProfile }: { initialProfile: LandingProfile }) {
   const [bio, setBio] = useState(initialProfile.bio);
-  const [bioEs, setBioEs] = useState(initialProfile.bioEs);
   const [savingBio, setSavingBio] = useState(false);
   const [bioStatus, setBioStatus] = useState<{ error: boolean; text: string } | null>(null);
 
@@ -35,7 +34,7 @@ export default function LandingForm({ initialProfile }: { initialProfile: Landin
       const res = await fetch("/api/profile", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ bio, bio_es: bioEs }),
+        body: JSON.stringify({ bio }),
       });
       if (!res.ok) throw new Error(await errorFrom(res, "Couldn't save the bio"));
       setBioStatus({ error: false, text: "Saved" });
@@ -74,19 +73,6 @@ export default function LandingForm({ initialProfile }: { initialProfile: Landin
           <textarea
             value={bio}
             onChange={(event) => setBio(event.target.value)}
-            rows={4}
-            required
-            style={adminTypography.textarea}
-          />
-        </div>
-
-        <div className="flex flex-col gap-1.5">
-          <span className="uppercase" style={adminTypography.label}>
-            Bio (ES)
-          </span>
-          <textarea
-            value={bioEs}
-            onChange={(event) => setBioEs(event.target.value)}
             rows={4}
             required
             style={adminTypography.textarea}

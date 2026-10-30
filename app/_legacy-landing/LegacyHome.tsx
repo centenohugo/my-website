@@ -4,8 +4,7 @@
 import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import t from "@/lib/copy";
 import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
 import JsonLd from "../JsonLd";
 import LandingHero from "../LandingHero";
@@ -14,10 +13,7 @@ export const metadata: Metadata = {
   alternates: { canonical: "/" },
 };
 
-export default async function Home() {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
-
+export default function Home() {
   const SECTIONS = [
     { label: t.nav.projects, href: "/projects" },
     { label: t.nav.blog, href: "/blog" },
@@ -34,7 +30,7 @@ export default async function Home() {
           url: SITE_URL,
           name: t.meta.title,
           description: t.meta.description,
-          inLanguage: locale,
+          inLanguage: "en",
           author: {
             "@type": "Person",
             "@id": absoluteUrl("/about#person"),

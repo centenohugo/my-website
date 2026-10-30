@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import t from "@/lib/copy";
 import LandingFace from "./LandingFace";
 import { siteColors, siteFonts, siteTypography } from "./theme";
 
@@ -14,13 +13,10 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default async function NotFound() {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
-
+export default function NotFound() {
   return (
     // Fixed overlay above the site chrome: the root layout always renders the
-    // navbar/footer/locale toggle around route content, and the 404 screen
+    // navbar/footer around route content, and the 404 screen
     // should show none of them.
     <main
       className="fixed inset-0 z-[100] flex flex-col overflow-hidden"

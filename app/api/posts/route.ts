@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   // every load-more; branching the order/filter on session desynced them and
   // hung the infinite scroll. The admin list uses its own SQL, not this route.
   const posts = await sql`
-    select id, title, subtitle, title_es, subtitle_es, slug, status, created_at, updated_at, published_at, image_url
+    select id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url
     from posts
     where status = 'published'
     order by published_at desc
@@ -39,9 +39,6 @@ export async function POST(request: Request) {
     slug: requestedSlug,
     subtitle = null,
     image_url = null,
-    title_es = null,
-    subtitle_es = null,
-    content_es = null,
     asset_prefix = null,
   } = body
 
@@ -63,9 +60,9 @@ export async function POST(request: Request) {
 
   try {
     const [post] = await sql`
-      insert into posts (title, subtitle, slug, content, status, published_at, image_url, title_es, subtitle_es, content_es, asset_prefix)
-      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url}, ${title_es}, ${subtitle_es}, ${content_es}, ${isAssetId(asset_prefix) ? asset_prefix : null})
-      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es, asset_prefix
+      insert into posts (title, subtitle, slug, content, status, published_at, image_url, asset_prefix)
+      values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${publishedAt}, ${image_url}, ${isAssetId(asset_prefix) ? asset_prefix : null})
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, asset_prefix
     `
     return NextResponse.json(post, { status: 201 })
   } catch (error) {

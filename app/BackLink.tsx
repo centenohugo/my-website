@@ -3,16 +3,13 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getDictionary } from "@/lib/i18n/dictionary";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import t from "@/lib/copy";
 import { backEligibleKey, parentPath } from "./navHistory";
 import { siteTypography } from "./theme";
 
 export default function BackLink() {
   const pathname = usePathname();
   const router = useRouter();
-  const { locale } = useLocale();
-  const t = getDictionary(locale);
   const [canGoBack, setCanGoBack] = useState(false);
 
   useEffect(() => {
