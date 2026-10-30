@@ -16,9 +16,11 @@ const PAD = FACE_PARAMS.strokeWidth + 2;
  * (see .about-flip rules in globals.css).
  */
 export default function AboutFlipFace({
+  photoUrl,
   photoAlt,
   flipLabel,
 }: {
+  photoUrl: string;
   photoAlt: string;
   flipLabel: string;
 }) {
@@ -205,7 +207,7 @@ export default function AboutFlipFace({
         </div>
         <div className="about-flip-side about-flip-back">
           <Image
-            src="/me.jpg"
+            src={photoUrl}
             alt={photoAlt}
             fill
             sizes={`${size}px`}
