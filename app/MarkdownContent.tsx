@@ -115,19 +115,44 @@ export default function MarkdownContent({ content }: { content: string }) {
           code: ({ children }) => (
             <code
               className="rounded px-1 py-0.5"
-              style={{ ...siteTypography.bodyCode, backgroundColor: siteColors.paperElevated }}
+              style={{
+                ...siteTypography.bodyCode,
+                // Relative to the surrounding text, so inline code tracks the
+                // paragraph, heading or list item it sits in.
+                fontSize: "0.84em",
+                backgroundColor: siteColors.codeBackground,
+                border: `1px solid ${siteColors.codeBorder}`,
+              }}
             >
               {children}
             </code>
           ),
-          pre: ({ children }) => (
-            <pre
-              className="overflow-x-auto rounded p-4"
-              style={{ ...siteTypography.bodyCode, backgroundColor: siteColors.paperElevated }}
-            >
-              {children}
-            </pre>
-          ),
+          // A fenced block reaches here as <pre> around the inline code renderer
+          // above. The pill styling would sit inside the block's own box, so the
+          // inner <code> is rebuilt bare and the <pre> carries the styling.
+          pre: ({ children }) => {
+            const child = Children.toArray(children)[0];
+            const { children: text, className } =
+              isValidElement(child)
+                ? (child.props as { children?: ReactNode; className?: string })
+                : { children, className: undefined };
+            return (
+              <pre
+                className="overflow-x-auto rounded px-5 py-4"
+                style={{
+                  ...siteTypography.bodyCode,
+                  lineHeight: 1.65,
+                  backgroundColor: siteColors.codeBackground,
+                  border: `1px solid ${siteColors.codeBorder}`,
+                  // The default track is a white bar under long lines.
+                  scrollbarWidth: "thin",
+                  scrollbarColor: `${siteColors.dateMono} transparent`,
+                }}
+              >
+                <code className={className}>{text}</code>
+              </pre>
+            );
+          },
           // The markdown alt text does double duty: it is the visible caption
           // and the alt attribute. An image written without one is decorative,
           // and alt="" is how you say that — omitting the attribute instead

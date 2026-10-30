@@ -10,6 +10,7 @@
   --color-foreground: var(--foreground);
   --font-sans: var(--font-site-sans);
   --font-serif: var(--font-site-serif);
+  --font-mono: var(--font-site-mono);
 }
 
 html {
