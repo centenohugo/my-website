@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { formatFullDate } from "@/lib/i18n/formatDate";
+import { formatFullDate } from "@/lib/formatDate";
 import CopyLinkButton from "./CopyLinkButton";
 import DeleteContentButton from "./DeleteContentButton";
 import { adminColors, adminTypography } from "./theme";
@@ -46,7 +46,7 @@ export default function AdminList({
               </span>
               <span className="uppercase" style={adminTypography.listMeta}>
                 {/* The admin panel is English-only. */}
-                {formatFullDate(item.published_at, "en") || "No date"}
+                {formatFullDate(item.published_at) || "No date"}
               </span>
             </span>
           </div>

@@ -1,15 +1,11 @@
 "use client";
 
-import { getDictionary } from "@/lib/i18n/dictionary";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import t from "@/lib/copy";
 import InfiniteCardGrid from "../InfiniteCardGrid";
 import PostCard, { type Post } from "./PostCard";
 import { blogColors, blogLayout, blogScrollBehavior, blogTypography } from "./theme";
 
 export default function BlogGrid({ initialPosts }: { initialPosts: Post[] }) {
-  const { locale } = useLocale();
-  const t = getDictionary(locale);
-
   return (
     <InfiniteCardGrid
       stateKey="nav:blogGridState"

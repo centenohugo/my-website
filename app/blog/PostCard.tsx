@@ -1,8 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { formatCardDate } from "@/lib/i18n/formatDate";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import { formatCardDate } from "@/lib/formatDate";
 import CoverImage from "../CoverImage";
 import { blogLayout, blogTypography } from "./theme";
 
@@ -10,8 +9,6 @@ export type Post = {
   slug: string;
   title: string;
   subtitle: string | null;
-  title_es?: string | null;
-  subtitle_es?: string | null;
   published_at: string | null;
   image_url: string | null;
 };
@@ -24,9 +21,7 @@ export default function PostCard({
   /** Set on the first card in the grid — it is the listing page's LCP element. */
   eager?: boolean;
 }) {
-  const { locale } = useLocale();
-  const title = locale === "es" && post.title_es ? post.title_es : post.title;
-  const subtitle = locale === "es" && post.subtitle_es ? post.subtitle_es : post.subtitle;
+  const { title, subtitle } = post;
 
   return (
     <Link
@@ -46,7 +41,7 @@ export default function PostCard({
 
       <div className="flex flex-col gap-1.5">
         <span className="uppercase" style={blogTypography.cardDate}>
-          {formatCardDate(post.published_at, locale)}
+          {formatCardDate(post.published_at)}
         </span>
 
         <h3 style={{ ...blogTypography.cardTitle, textWrap: "pretty" }}>

@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { getDictionary } from "@/lib/i18n/dictionary";
-import { formatCardDate } from "@/lib/i18n/formatDate";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import t from "@/lib/copy";
+import { formatCardDate } from "@/lib/formatDate";
 import CoverImage from "../CoverImage";
 import { type ProjectStage, projectLayout, projectTypography } from "./theme";
 
@@ -11,8 +10,6 @@ export type Project = {
   slug: string;
   title: string;
   subtitle: string | null;
-  title_es?: string | null;
-  subtitle_es?: string | null;
   published_at: string | null;
   image_url: string | null;
   stage: ProjectStage;
@@ -26,11 +23,7 @@ export default function ProjectCard({
   /** Set on the first card in the grid — it is the listing page's LCP element. */
   eager?: boolean;
 }) {
-  const { locale } = useLocale();
-  const t = getDictionary(locale);
-  const title = locale === "es" && project.title_es ? project.title_es : project.title;
-  const subtitle =
-    locale === "es" && project.subtitle_es ? project.subtitle_es : project.subtitle;
+  const { title, subtitle } = project;
 
   return (
     <Link
@@ -51,7 +44,7 @@ export default function ProjectCard({
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center gap-2">
           <span className="uppercase" style={projectTypography.cardDate}>
-            {formatCardDate(project.published_at, locale)}
+            {formatCardDate(project.published_at)}
           </span>
           <span className="uppercase" style={projectTypography.stageBadge}>
             {t.projects.stages[project.stage]}

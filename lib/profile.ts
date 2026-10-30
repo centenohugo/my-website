@@ -1,6 +1,6 @@
 import { cache } from 'react'
 import { sql } from './db'
-import { getDictionary, type Locale } from './i18n/dictionary'
+import copy from './copy'
 import { absoluteUrl } from './site'
 
 // Shipped with the site, so the landing has a photo before one is uploaded.
@@ -8,13 +8,11 @@ export const DEFAULT_PHOTO_URL = '/me.jpg'
 
 type SiteProfileRow = {
   bio: string | null
-  bio_es: string | null
   photo_url: string | null
 }
 
 export type LandingProfile = {
   bio: string
-  bioEs: string
   photoUrl: string
 }
 
@@ -24,7 +22,7 @@ export type LandingProfile = {
 const getSiteProfileRow = cache(async (): Promise<SiteProfileRow | null> => {
   try {
     const [row] = await sql<SiteProfileRow[]>`
-      select bio, bio_es, photo_url from site_profile where id
+      select bio, photo_url from site_profile where id
     `
     return row ?? null
   } catch (error) {
@@ -33,18 +31,13 @@ const getSiteProfileRow = cache(async (): Promise<SiteProfileRow | null> => {
   }
 })
 
-/** Both bios and the photo, with the built-in defaults filling any gap. */
+/** The bio and the photo, with the built-in defaults filling any gap. */
 export async function getLandingProfile(): Promise<LandingProfile> {
   const row = await getSiteProfileRow()
   return {
-    bio: row?.bio || getDictionary('en').about.bio,
-    bioEs: row?.bio_es || getDictionary('es').about.bio,
+    bio: row?.bio || copy.about.bio,
     photoUrl: row?.photo_url || DEFAULT_PHOTO_URL,
   }
-}
-
-export function bioFor(profile: LandingProfile, locale: Locale) {
-  return locale === 'es' ? profile.bioEs : profile.bio
 }
 
 /** Uploaded photos are already absolute Blob URLs; the default is site-relative. */

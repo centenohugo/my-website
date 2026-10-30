@@ -1,15 +1,11 @@
 "use client";
 
-import { getDictionary } from "@/lib/i18n/dictionary";
-import { useLocale } from "@/lib/i18n/LocaleProvider";
+import t from "@/lib/copy";
 import InfiniteCardGrid from "../InfiniteCardGrid";
 import ProjectCard, { type Project } from "./ProjectCard";
 import { projectColors, projectLayout, projectScrollBehavior, projectTypography } from "./theme";
 
 export default function ProjectsGrid({ initialProjects }: { initialProjects: Project[] }) {
-  const { locale } = useLocale();
-  const t = getDictionary(locale);
-
   return (
     <InfiniteCardGrid
       stateKey="nav:projectsGridState"

@@ -2,10 +2,9 @@ import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Analytics } from "@vercel/analytics/next"
 import type { Metadata } from "next";
 import Link from "next/link";
-import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
-import { absolutePhotoUrl, bioFor, getLandingProfile } from "@/lib/profile";
+import t from "@/lib/copy";
+import { absolutePhotoUrl, getLandingProfile } from "@/lib/profile";
 import { absoluteUrl, AUTHOR_NAME, AUTHOR_PROFILES, SITE_URL } from "@/lib/site";
 import HashScroll from "./HashScroll";
 import JsonLd from "./JsonLd";
@@ -22,11 +21,9 @@ import { siteTypography } from "./theme";
 // /projects to /#projects). The previous landing is kept in
 // app/_legacy-landing.
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
   // The bio and photo are edited from the admin; see lib/profile.ts.
   const profile = await getLandingProfile();
-  const bio = bioFor(profile, locale);
+  const { bio } = profile;
   return {
     description: bio,
     alternates: { canonical: "/" },
@@ -41,17 +38,15 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function Home() {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
   const profile = await getLandingProfile();
-  const bio = bioFor(profile, locale);
+  const { bio } = profile;
 
   // A database hiccup should cost the home page its project list, not the
   // whole page: the About part above it falls back to its built-in copy.
   let initialProjects: Project[] = [];
   try {
     initialProjects = await sql<Project[]>`
-      select slug, title, subtitle, title_es, subtitle_es, published_at, image_url, stage
+      select slug, title, subtitle, published_at, image_url, stage
       from projects
       where status = 'published'
       order by published_at desc
@@ -74,7 +69,7 @@ export default async function Home() {
               url: SITE_URL,
               name: t.meta.title,
               description: t.meta.description,
-              inLanguage: locale,
+              inLanguage: "en",
               author: { "@id": absoluteUrl("/#person") },
             },
             {

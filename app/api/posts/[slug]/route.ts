@@ -46,9 +46,6 @@ export async function PUT(
     slug: requestedSlug,
     subtitle,
     image_url,
-    title_es,
-    subtitle_es,
-    content_es,
     asset_prefix,
   } = body
 
@@ -80,13 +77,10 @@ export async function PUT(
         status = ${newStatus},
         published_at = ${publishedAt},
         image_url = ${image_url !== undefined ? image_url : existing.image_url},
-        title_es = ${title_es !== undefined ? title_es : existing.title_es},
-        subtitle_es = ${subtitle_es !== undefined ? subtitle_es : existing.subtitle_es},
-        content_es = ${content_es !== undefined ? content_es : existing.content_es},
         asset_prefix = ${newAssetPrefix},
         updated_at = now()
       where id = ${existing.id}
-      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, title_es, subtitle_es, content_es, asset_prefix
+      returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, asset_prefix
     `
     return NextResponse.json(updated)
   } catch (error) {

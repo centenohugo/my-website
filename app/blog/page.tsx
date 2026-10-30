@@ -1,14 +1,11 @@
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
 import { sql } from "@/lib/db";
-import { getDictionary, LOCALE_COOKIE, toLocale } from "@/lib/i18n/dictionary";
+import t from "@/lib/copy";
 import BlogGrid from "./BlogGrid";
 import type { Post } from "./PostCard";
 import { blogLayout, blogScrollBehavior, blogTypography } from "./theme";
 
-export async function generateMetadata(): Promise<Metadata> {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
+export function generateMetadata(): Metadata {
   return {
     title: t.blog.pageTitle,
     description: t.blog.metaDescription,
@@ -23,11 +20,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function BlogPage() {
-  const locale = toLocale((await cookies()).get(LOCALE_COOKIE)?.value);
-  const t = getDictionary(locale);
-
   const initialPosts = await sql<Post[]>`
-    select slug, title, subtitle, title_es, subtitle_es, published_at, image_url
+    select slug, title, subtitle, published_at, image_url
     from posts
     where status = 'published'
     order by published_at desc

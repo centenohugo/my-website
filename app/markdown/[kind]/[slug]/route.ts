@@ -1,5 +1,4 @@
 import { getPublishedDoc, isContentKind, isoDay } from '@/lib/content'
-import { toLocale } from '@/lib/i18n/dictionary'
 import { absoluteUrl } from '@/lib/site'
 
 // Plain-Markdown mirror of every published post and project. Agents fetch
@@ -15,7 +14,7 @@ function frontMatterValue(value: string) {
 }
 
 export async function GET(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ kind: string; slug: string }> }
 ) {
   const { kind, slug } = await params
@@ -23,11 +22,7 @@ export async function GET(
     return new Response('Not found\n', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } })
   }
 
-  // The site picks its language from a cookie; agents have none, so the
-  // Markdown mirror takes it from an explicit ?lang= and defaults to English.
-  const locale = toLocale(new URL(request.url).searchParams.get('lang') ?? undefined)
-
-  const doc = await getPublishedDoc(kind, slug, locale)
+  const doc = await getPublishedDoc(kind, slug)
   if (!doc) {
     return new Response('Not found\n', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } })
   }
@@ -41,7 +36,7 @@ export async function GET(
     doc.stage ? `stage: ${doc.stage}` : null,
     doc.published_at ? `published: ${isoDay(doc.published_at)}` : null,
     `updated: ${isoDay(doc.updated_at)}`,
-    `language: ${locale}`,
+    'language: en',
     `canonical_url: ${canonical}`,
     doc.repo_url ? `repository: ${doc.repo_url}` : null,
     doc.live_url ? `live_url: ${doc.live_url}` : null,

@@ -1,5 +1,4 @@
-import { isoDay, listPublishedPosts, listPublishedProjects, localizeEntry } from '@/lib/content'
-import { DEFAULT_LOCALE } from '@/lib/i18n/dictionary'
+import { isoDay, listPublishedPosts, listPublishedProjects } from '@/lib/content'
 import { absoluteUrl, SITE_AUTHOR } from '@/lib/site'
 
 // llms.txt (llmstxt.org): a curated, hand-sized index of the site for agents
@@ -29,8 +28,7 @@ export async function GET() {
     `> product, no pricing and no public API.`,
     '',
     'Every post and project is also served as plain Markdown at the same URL with `.md` appended',
-    '(for example `/blog/some-post.md`). Add `?lang=es` for the Spanish version where one exists;',
-    'the HTML pages pick their language from a cookie, the Markdown mirrors from that query.',
+    '(for example `/blog/some-post.md`).',
     '',
     '## Pages',
     '',
@@ -44,7 +42,7 @@ export async function GET() {
     lines.push('- No published posts yet.', '')
   } else {
     for (const post of posts) {
-      const { title, subtitle } = localizeEntry(post, DEFAULT_LOCALE)
+      const { title, subtitle } = post
       const note = [subtitle, `published ${formatDate(post.published_at)}`]
         .filter(Boolean)
         .join(' — ')
@@ -58,7 +56,7 @@ export async function GET() {
     lines.push('- No published projects yet.', '')
   } else {
     for (const project of projects) {
-      const { title, subtitle } = localizeEntry(project, DEFAULT_LOCALE)
+      const { title, subtitle } = project
       const note = [subtitle, `stage: ${project.stage.replace('_', ' ')}`]
         .filter(Boolean)
         .join(' — ')
