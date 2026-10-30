@@ -38,3 +38,27 @@ export async function deleteAssetFolder(kind: BlobKind, assetId: string) {
     console.error(`blob: failed to clean up ${prefix}`, err)
   }
 }
+
+// The landing photo lives on its own, outside the per-article folders. Only the
+// current one is kept, so the folder never holds more than a single image.
+export const PROFILE_PHOTO_FOLDER = 'profile/'
+
+// Best-effort, like deleteAssetFolder: the new photo is already saved, so a
+// leftover old one is clutter in the store, not a broken page.
+export async function deleteProfilePhotosExcept(keepUrl: string) {
+  try {
+    let cursor: string | undefined
+    do {
+      const batch = await list({ prefix: PROFILE_PHOTO_FOLDER, cursor })
+      const stale = batch.blobs
+        .map((blob) => blob.url)
+        .filter((url) => url !== keepUrl)
+      if (stale.length > 0) {
+        await del(stale)
+      }
+      cursor = batch.cursor
+    } while (cursor)
+  } catch (err) {
+    console.error(`blob: failed to clean up ${PROFILE_PHOTO_FOLDER}`, err)
+  }
+}

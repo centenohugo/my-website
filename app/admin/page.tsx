@@ -1,4 +1,5 @@
 import { sql } from "@/lib/db";
+import { getLandingProfile } from "@/lib/profile";
 import { siteLayout, siteTypography } from "../theme";
 import { type AdminListItem } from "./AdminList";
 import AdminTabs from "./AdminTabs";
@@ -7,7 +8,7 @@ import LogoutButton from "./LogoutButton";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [posts, projects] = await Promise.all([
+  const [posts, projects, profile] = await Promise.all([
     // published_at is a calendar day (see lib/publishedDate.ts), so it comes
     // back as a plain YYYY-MM-DD string rather than a timestamp the formatter
     // would have to re-pin to UTC.
@@ -28,6 +29,7 @@ export default async function AdminPage() {
       from projects
       order by published_at desc nulls first, created_at desc
     `,
+    getLandingProfile(),
   ]);
 
   return (
@@ -44,7 +46,7 @@ export default async function AdminPage() {
         <LogoutButton />
       </header>
 
-      <AdminTabs posts={posts} projects={projects} />
+      <AdminTabs posts={posts} projects={projects} profile={profile} />
     </main>
   );
 }
