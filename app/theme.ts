@@ -12,11 +12,16 @@ export const siteColors = {
   tagPlaceholder: "rgba(30,24,14,0.26)",
   loadingMono: "#a89d87",
   archiveEndMono: "#c0b6a0",
+  // A shade down from the paper, so code reads as set apart without leaving
+  // the warm palette.
+  codeBackground: "#ebe4d6",
+  codeBorder: "rgba(30,24,14,0.1)",
 } as const;
 
 export const siteFonts = {
   serif: "var(--font-site-serif)",
   sans: "var(--font-site-sans)",
+  mono: "var(--font-site-mono)",
 } as const;
 
 export const siteTypography = {
@@ -85,9 +90,9 @@ export const siteTypography = {
     color: siteColors.textSecondary,
   },
   bodyCode: {
-    fontFamily: siteFonts.sans,
-    fontSize: "13.5px",
-    color: siteColors.textCardTitle,
+    fontFamily: siteFonts.mono,
+    fontSize: "14px",
+    color: siteColors.textPrimary,
   },
   bodyCaption: {
     fontFamily: siteFonts.sans,
