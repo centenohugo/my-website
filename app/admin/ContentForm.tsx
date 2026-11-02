@@ -214,7 +214,7 @@ export default function ContentForm({
     }
   }
 
-  function insertAtCursor(text: string) {
+  function insertAtCursor(text: string, cursorOffset = text.length) {
     const textarea = textareaRef.current;
     if (!textarea) {
       setContent((prev) => `${prev}\n\n${text}\n\n`);
@@ -227,7 +227,7 @@ export default function ContentForm({
     setContent(next);
 
     requestAnimationFrame(() => {
-      const cursor = start + text.length + 4;
+      const cursor = start + cursorOffset + 2;
       textarea.focus();
       textarea.setSelectionRange(cursor, cursor);
     });
@@ -250,9 +250,11 @@ export default function ContentForm({
       setInlineUploading(false);
     }
 
-    const caption = window.prompt("Caption (leave empty for none):", "");
+    // No window.prompt for the caption: embedded browsers throw on it, which
+    // lost the image after it had uploaded. The cursor lands where the caption
+    // goes instead, and leaving it empty means no caption.
     setTab("write");
-    insertAtCursor(`![${caption ?? ""}](${url})`);
+    insertAtCursor(`![](${url})`, 2);
   }
 
   async function handleSubmit(event: React.FormEvent) {
