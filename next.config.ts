@@ -1,6 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // File tracing misses libvips, the shared library sharp links against at
+  // load time, so without this both routes fail with a 500 on Vercel.
+  outputFileTracingIncludes: {
+    "/api/upload": ["./node_modules/@img/sharp-*linux-x64/**/*"],
+    "/api/profile/photo": ["./node_modules/@img/sharp-*linux-x64/**/*"],
+  },
   async redirects() {
     // About became the home page and the project list lives below it; keep
     // old links and bookmarks working.
