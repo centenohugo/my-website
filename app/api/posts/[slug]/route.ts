@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { deleteAssetFolder, isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
@@ -82,6 +83,8 @@ export async function PUT(
       where id = ${existing.id}
       returning id, title, subtitle, slug, status, created_at, updated_at, published_at, image_url, asset_prefix
     `
+    // The list on this page is prerendered at build time, so it has to be told.
+    revalidatePath('/blog')
     return NextResponse.json(updated)
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === '23505') {
@@ -114,6 +117,8 @@ export async function DELETE(
   if (deleted.asset_prefix) {
     await deleteAssetFolder('post', deleted.asset_prefix)
   }
+
+  revalidatePath('/blog')
 
   return new NextResponse(null, { status: 204 })
 }

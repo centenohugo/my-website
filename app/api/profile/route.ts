@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { sql } from '@/lib/db'
 import { hasValidSession } from '@/lib/require-session'
@@ -21,6 +22,8 @@ export async function PUT(request: Request) {
     on conflict (id) do update
       set bio = excluded.bio, updated_at = now()
   `
+
+  revalidatePath('/')
 
   return NextResponse.json({ bio })
 }

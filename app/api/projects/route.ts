@@ -1,3 +1,4 @@
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { isAssetId } from '@/lib/blob'
 import { sql } from '@/lib/db'
@@ -70,6 +71,8 @@ export async function POST(request: Request) {
       values (${title}, ${subtitle}, ${slug}, ${content}, ${status}, ${stage}, ${publishedAt}, ${image_url}, ${repo_url}, ${live_url}, ${isAssetId(asset_prefix) ? asset_prefix : null})
       returning id, title, subtitle, slug, status, stage, created_at, updated_at, published_at, image_url, repo_url, live_url, asset_prefix
     `
+    // The list on this page is prerendered at build time, so it has to be told.
+    revalidatePath('/')
     return NextResponse.json(project, { status: 201 })
   } catch (error) {
     if (error instanceof Error && 'code' in error && error.code === '23505') {
