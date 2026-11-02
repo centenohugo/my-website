@@ -17,3 +17,25 @@ midnight UTC and `lib/formatDate.ts` renders it with `timeZone: "UTC"`.
 Keep both ends pinned. The cards are client components and the detail pages are
 server components, so an unpinned format mismatches on hydration and shows a
 date stored on the 1st as the previous month to any visitor west of UTC.
+
+# Agent- and crawler-facing surface
+
+The site is built to be readable by AI agents and crawlers, not only by
+browsers. Every page is server-rendered, so the answer is in the initial HTML
+with no JavaScript needed.
+
+- `/robots.txt` (`app/robots.ts`) — opts every crawler in, including the named
+  AI agents, and excludes `/admin`, `/login`, `/api/` and `?share=` links.
+- `/sitemap.xml` (`app/sitemap.ts`) — static routes plus every published project,
+  regenerated hourly.
+- `/llms.txt` (`app/llms.txt/route.ts`) — the [llmstxt.org](https://llmstxt.org)
+  curated index: what the site is, then one line per page linking to its
+  Markdown.
+- `/projects/<slug>.md` — plain-Markdown mirrors of every published project,
+  with YAML front matter. They are rewrites (`next.config.ts`) onto
+  `app/markdown/projects/[slug]/route.ts`, and each HTML page advertises its
+  mirror with `<link rel="alternate" type="text/markdown">`.
+- JSON-LD (`app/JsonLd.tsx`) on the home and project pages.
+
+`NEXT_PUBLIC_SITE_URL` drives every absolute URL in that list — see
+`lib/site.ts`.
