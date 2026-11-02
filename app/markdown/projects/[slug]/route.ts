@@ -1,11 +1,11 @@
-import { getPublishedDoc, isContentKind, isoDay } from '@/lib/content'
+import { getPublishedProjectDoc, isoDay } from '@/lib/content'
 import { absoluteUrl } from '@/lib/site'
 
-// Plain-Markdown mirror of every published post and project. Agents fetch
+// Plain-Markdown mirror of every published project. Agents fetch
 // Markdown far more often than HTML, and the body is already stored as
 // Markdown, so this is the source text rather than a scrape of the rendered
-// page. Reachable as /blog/<slug>.md and /projects/<slug>.md (see the rewrites
-// in next.config.ts), which is the convention llms.txt readers probe for.
+// page. Reachable as /projects/<slug>.md (see the rewrites in next.config.ts),
+// which is the convention llms.txt readers probe for.
 export const revalidate = 3600
 
 function frontMatterValue(value: string) {
@@ -15,25 +15,22 @@ function frontMatterValue(value: string) {
 
 export async function GET(
   _request: Request,
-  { params }: { params: Promise<{ kind: string; slug: string }> }
+  { params }: { params: Promise<{ slug: string }> }
 ) {
-  const { kind, slug } = await params
-  if (!isContentKind(kind)) {
-    return new Response('Not found\n', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } })
-  }
+  const { slug } = await params
 
-  const doc = await getPublishedDoc(kind, slug)
+  const doc = await getPublishedProjectDoc(slug)
   if (!doc) {
     return new Response('Not found\n', { status: 404, headers: { 'content-type': 'text/plain; charset=utf-8' } })
   }
 
-  const canonical = absoluteUrl(`/${kind}/${slug}`)
+  const canonical = absoluteUrl(`/projects/${slug}`)
   const frontMatter = [
     '---',
     `title: ${frontMatterValue(doc.title)}`,
     doc.subtitle ? `description: ${frontMatterValue(doc.subtitle)}` : null,
-    `type: ${kind === 'blog' ? 'blog post' : 'project'}`,
-    doc.stage ? `stage: ${doc.stage}` : null,
+    'type: project',
+    `stage: ${doc.stage}`,
     doc.published_at ? `published: ${isoDay(doc.published_at)}` : null,
     `updated: ${isoDay(doc.updated_at)}`,
     'language: en',

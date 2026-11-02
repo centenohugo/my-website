@@ -32,7 +32,7 @@ export function generateMetadata(): Metadata {
     metadataBase: new URL(SITE_URL),
     title: {
       default: t.meta.title,
-      // Child pages set a bare title ("Blog", a post headline) and get the
+      // Child pages set a bare title (a project headline) and get the
       // site name appended.
       template: `%s · ${t.meta.title}`,
     },

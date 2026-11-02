@@ -1,4 +1,4 @@
-import { isoDay, listPublishedPosts, listPublishedProjects } from '@/lib/content'
+import { listPublishedProjects } from '@/lib/content'
 import { absoluteUrl, SITE_AUTHOR } from '@/lib/site'
 
 // llms.txt (llmstxt.org): a curated, hand-sized index of the site for agents
@@ -6,16 +6,11 @@ import { absoluteUrl, SITE_AUTHOR } from '@/lib/site'
 // Markdown mirror, so following one link gives the full text of that page.
 export const revalidate = 3600
 
-function formatDate(value: string | null) {
-  return isoDay(value) ?? 'unpublished'
-}
-
 export async function GET() {
-  let posts: Awaited<ReturnType<typeof listPublishedPosts>> = []
   let projects: Awaited<ReturnType<typeof listPublishedProjects>> = []
 
   try {
-    ;[posts, projects] = await Promise.all([listPublishedPosts(), listPublishedProjects()])
+    projects = await listPublishedProjects()
   } catch (error) {
     console.error('llms.txt: could not list published content', error)
   }
@@ -24,32 +19,17 @@ export async function GET() {
     `# ${SITE_AUTHOR.name}`,
     '',
     `> Personal site of ${SITE_AUTHOR.name}, an engineering student who writes about what he builds.`,
-    `> It holds an about page with the project write-ups below it, and a blog. Nothing else: there is no`,
+    `> It holds an about page with the project write-ups below it. Nothing else: there is no`,
     `> product, no pricing and no public API.`,
     '',
-    'Every post and project is also served as plain Markdown at the same URL with `.md` appended',
-    '(for example `/blog/some-post.md`).',
+    'Every project is also served as plain Markdown at the same URL with `.md` appended',
+    '(for example `/projects/some-project.md`).',
     '',
     '## Pages',
     '',
     `- [Home](${absoluteUrl('/')}): who ${SITE_AUTHOR.name} is, plus contact and social links, followed by every published project with its stage.`,
-    `- [Blog](${absoluteUrl('/blog')}): every published post, newest first.`,
     '',
   ]
-
-  lines.push('## Blog posts', '')
-  if (posts.length === 0) {
-    lines.push('- No published posts yet.', '')
-  } else {
-    for (const post of posts) {
-      const { title, subtitle } = post
-      const note = [subtitle, `published ${formatDate(post.published_at)}`]
-        .filter(Boolean)
-        .join(' — ')
-      lines.push(`- [${title}](${absoluteUrl(`/blog/${post.slug}.md`)}): ${note}`)
-    }
-    lines.push('')
-  }
 
   lines.push('## Projects', '')
   if (projects.length === 0) {

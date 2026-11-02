@@ -1,4 +1,4 @@
-// Meta descriptions and JSON-LD `description` need plain prose. Post bodies are
+// Meta descriptions and JSON-LD `description` need plain prose. Project bodies are
 // markdown, so strip the syntax rather than shipping "## Heading" into a SERP.
 
 const RULES: [RegExp, string][] = [

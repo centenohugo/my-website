@@ -7,21 +7,18 @@ import AdminList, { type AdminListItem } from "./AdminList";
 import LandingForm from "./LandingForm";
 import { adminTypography } from "./theme";
 
-const TABS = ["posts", "projects", "landing"] as const;
+const TABS = ["projects", "landing"] as const;
 type Tab = (typeof TABS)[number];
 
 const TAB_LABELS: Record<Tab, string> = {
-  posts: "Posts",
   projects: "Projects",
   landing: "Landing",
 };
 
 export default function AdminTabs({
-  posts,
   projects,
   profile,
 }: {
-  posts: AdminListItem[];
   projects: AdminListItem[];
   profile: LandingProfile;
 }) {
@@ -29,14 +26,14 @@ export default function AdminTabs({
   // history restores always render the tab the URL says.
   const searchParams = useSearchParams();
   const requested = searchParams.get("tab");
-  const tab: Tab = TABS.find((t) => t === requested) ?? "posts";
+  const tab: Tab = TABS.find((t) => t === requested) ?? "projects";
 
   function switchTab(next: Tab) {
     if (next === tab) return;
     // pushState integrates with the Next.js router (updates useSearchParams
     // without a server round-trip) and makes each tab switch a history entry,
     // so the back button returns to the previous tab.
-    window.history.pushState(null, "", next === "posts" ? "/admin" : `/admin?tab=${next}`);
+    window.history.pushState(null, "", next === "projects" ? "/admin" : `/admin?tab=${next}`);
   }
 
   return (
@@ -54,23 +51,6 @@ export default function AdminTabs({
           </button>
         ))}
       </div>
-
-      {tab === "posts" && (
-        <>
-          <div className="mb-8">
-            <Link href="/admin/new" className="uppercase" style={adminTypography.buttonPrimary}>
-              + New post
-            </Link>
-          </div>
-          <AdminList
-            items={posts}
-            apiBase="/api/posts"
-            editHrefBase="/admin"
-            publicHrefBase="/blog"
-            emptyLabel="No posts yet."
-          />
-        </>
-      )}
 
       {tab === "projects" && (
         <>

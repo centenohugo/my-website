@@ -3,12 +3,10 @@ const BACK_ELIGIBLE_PREFIX = `${NAV_PREFIX}canGoBack:`;
 
 export function parentPath(pathname: string): string | null {
   if (pathname === "/") return null;
-  // Admin editor pages (/admin/new, /admin/[slug]/edit, /admin/projects/new,
-  // /admin/projects/[slug]/edit) all belong to the /admin list — there is no
-  // /admin/projects page; projects live in a tab of /admin.
-  if (pathname.startsWith("/admin/")) {
-    return pathname.startsWith("/admin/projects/") ? "/admin?tab=projects" : "/admin";
-  }
+  // Admin editor pages (/admin/projects/new, /admin/projects/[slug]/edit) belong
+  // to the /admin list — there is no /admin/projects page; projects live in a
+  // tab of /admin.
+  if (pathname.startsWith("/admin/")) return "/admin";
   // The project list is a section of the home page, not a page of its own.
   if (pathname.startsWith("/projects/")) return "/#projects";
   const segments = pathname.replace(/\/+$/, "").split("/").filter(Boolean);

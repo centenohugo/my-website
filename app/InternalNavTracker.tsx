@@ -11,7 +11,7 @@ export default function InternalNavTracker() {
 
   // Take full control of scroll position ourselves: the browser's own automatic
   // restoration races with client-side navigations and with Next's own scroll
-  // handling, so pages that need to restore scroll (e.g. BlogGrid) do it manually.
+  // handling, so pages that need to restore scroll (e.g. InfiniteCardGrid) do it manually.
   // A fresh mount also means a hard reload / direct URL hit, not a client-side
   // navigation, so any leftover nav bookkeeping from an earlier session in this
   // tab is stale and must not be reused.
@@ -26,9 +26,9 @@ export default function InternalNavTracker() {
       previousPathname.current = pathname;
       return;
     }
-    // parentPath may carry a query (/admin?tab=projects) or a hash
-    // (/#projects); previousPathname never does, so compare pathnames only.
-    const parent = parentPath(pathname)?.split(/[?#]/)[0] ?? null;
+    // parentPath may carry a hash (/#projects); previousPathname never does, so
+    // compare pathnames only.
+    const parent = parentPath(pathname)?.split("#")[0] ?? null;
     sessionStorage.setItem(
       backEligibleKey(pathname),
       previousPathname.current === parent ? "1" : "0"

@@ -121,7 +121,7 @@ export async function DELETE(
   }
 
   if (deleted.asset_prefix) {
-    await deleteAssetFolder('project', deleted.asset_prefix)
+    await deleteAssetFolder(deleted.asset_prefix)
   }
 
   revalidatePath('/')

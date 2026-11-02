@@ -6,7 +6,7 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 # Dates
 
-`published_at` on `posts` and `projects` is **the date shown on the page**, not
+`published_at` on `projects` is **the date shown on the page**, not
 necessarily when the article went live. It defaults to the moment of first
 publication, but the admin form's `DATE` field overrides it so work finished
 months ago can be backdated into its real place — public listings sort by this

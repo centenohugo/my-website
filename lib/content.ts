@@ -1,36 +1,18 @@
 import { cache } from 'react'
 import { sql } from './db'
 
-export type ContentKind = 'blog' | 'projects'
-
-export const CONTENT_KINDS: ContentKind[] = ['blog', 'projects']
-
-export function isContentKind(value: string): value is ContentKind {
-  return (CONTENT_KINDS as string[]).includes(value)
-}
-
-/** Row shape shared by the sitemap and llms.txt listings. */
-export type PublishedEntry = {
+/** Row shape of the llms.txt listing. */
+export type PublishedProject = {
   slug: string
   title: string
   subtitle: string | null
   published_at: string | null
   updated_at: string
+  stage: string
 }
 
-export type PublishedProject = PublishedEntry & { stage: string }
-
-// cache() dedupes these within a single request, so a route handler can list
-// entries without worrying about which other component already asked.
-export const listPublishedPosts = cache(async (): Promise<PublishedEntry[]> => {
-  return sql<PublishedEntry[]>`
-    select slug, title, subtitle, published_at, updated_at
-    from posts
-    where status = 'published'
-    order by published_at desc nulls last
-  `
-})
-
+// cache() dedupes this within a single request, so a route handler can list
+// projects without worrying about which other component already asked.
 export const listPublishedProjects = cache(async (): Promise<PublishedProject[]> => {
   return sql<PublishedProject[]>`
     select slug, title, subtitle, published_at, updated_at, stage
@@ -40,8 +22,8 @@ export const listPublishedProjects = cache(async (): Promise<PublishedProject[]>
   `
 })
 
-/** Full body of one published entry, used by the Markdown mirrors. */
-export type ContentDoc = {
+/** Full body of one published project, used by the Markdown mirrors. */
+export type ProjectDoc = {
   title: string
   subtitle: string | null
   content: string
@@ -49,27 +31,17 @@ export type ContentDoc = {
   updated_at: string
   repo_url: string | null
   live_url: string | null
-  stage: string | null
+  stage: string
 }
 
-export const getPublishedDoc = cache(
-  async (kind: ContentKind, slug: string): Promise<ContentDoc | null> => {
-    // Two literal queries instead of an interpolated table name: the column
-    // lists differ and the kind never reaches the database as a value.
-    const [row] =
-      kind === 'blog'
-        ? await sql<ContentDoc[]>`
-            select title, subtitle, content,
-                   published_at, updated_at, null as repo_url, null as live_url, null as stage
-            from posts
-            where slug = ${slug} and status = 'published'
-          `
-        : await sql<ContentDoc[]>`
-            select title, subtitle, content,
-                   published_at, updated_at, repo_url, live_url, stage
-            from projects
-            where slug = ${slug} and status = 'published'
-          `
+export const getPublishedProjectDoc = cache(
+  async (slug: string): Promise<ProjectDoc | null> => {
+    const [row] = await sql<ProjectDoc[]>`
+      select title, subtitle, content,
+             published_at, updated_at, repo_url, live_url, stage
+      from projects
+      where slug = ${slug} and status = 'published'
+    `
 
     return row ?? null
   }

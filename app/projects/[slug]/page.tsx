@@ -147,7 +147,7 @@ export default async function ProjectPage({
           style={{ paddingLeft: projectLayout.sidePadding, paddingRight: projectLayout.sidePadding }}
         >
           <div className="flex items-center gap-2">
-            <span className="uppercase" style={projectTypography.postDate}>
+            <span className="uppercase" style={projectTypography.detailDate}>
               {project.status === "published"
                 ? formatFullDate(project.published_at)
                 : t.common.draftBadge}
@@ -156,9 +156,9 @@ export default async function ProjectPage({
               {t.projects.stages[project.stage]}
             </span>
           </div>
-          <h1 style={{ ...projectTypography.postTitle, textWrap: "pretty" }}>{title}</h1>
+          <h1 style={{ ...projectTypography.detailTitle, textWrap: "pretty" }}>{title}</h1>
           {subtitle && (
-            <p style={{ ...projectTypography.postSubtitle, textWrap: "pretty" }}>{subtitle}</p>
+            <p style={{ ...projectTypography.detailSubtitle, textWrap: "pretty" }}>{subtitle}</p>
           )}
 
           {(project.repo_url || project.live_url) && (
@@ -169,7 +169,7 @@ export default async function ProjectPage({
                   target="_blank"
                   rel="noreferrer"
                   className="uppercase"
-                  style={{ ...projectTypography.postDate, textDecoration: "underline" }}
+                  style={{ ...projectTypography.detailDate, textDecoration: "underline" }}
                 >
                   {t.projects.codeLink}
                 </a>
@@ -180,7 +180,7 @@ export default async function ProjectPage({
                   target="_blank"
                   rel="noreferrer"
                   className="uppercase"
-                  style={{ ...projectTypography.postDate, textDecoration: "underline" }}
+                  style={{ ...projectTypography.detailDate, textDecoration: "underline" }}
                 >
                   {t.projects.liveLink}
                 </a>
