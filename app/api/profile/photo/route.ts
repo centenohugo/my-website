@@ -1,4 +1,5 @@
 import { del, put } from '@vercel/blob'
+import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import sharp from 'sharp'
 import { deleteProfilePhotosExcept, PROFILE_PHOTO_FOLDER } from '@/lib/blob'
@@ -77,6 +78,8 @@ export async function POST(request: Request) {
 
   // Only once the database points at the new photo is the old one unused.
   await deleteProfilePhotosExcept(url)
+
+  revalidatePath('/')
 
   return NextResponse.json({ url })
 }
