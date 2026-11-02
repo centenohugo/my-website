@@ -73,17 +73,13 @@ async function compressImage(file: File): Promise<File> {
 }
 
 export default function ContentForm({
-  kind,
   mode,
   initialData,
 }: {
-  kind: "post" | "project";
   mode: "create" | "edit";
   initialData?: ContentFormInitialData;
 }) {
   const router = useRouter();
-  const apiBase = kind === "post" ? "/api/posts" : "/api/projects";
-  const listHref = kind === "post" ? "/admin" : "/admin?tab=projects";
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [subtitle, setSubtitle] = useState(initialData?.subtitle ?? "");
@@ -106,8 +102,8 @@ export default function ContentForm({
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Immutable id for this article's blob folder (posts/<id>/ or
-  // projects/<id>/). Generated once per new article; articles created before
+  // Immutable id for this article's blob folder (projects/<id>/).
+  // Generated once per new article; articles created before
   // the folder scheme get one on their first edit that uploads an image.
   // Only ever reassigned by restoring an autosaved draft, which carries the
   // prefix its images were already uploaded under — adopting it keeps those
@@ -155,7 +151,7 @@ export default function ContentForm({
     [initialData, mountedAssetPrefix, initialDate]
   );
 
-  const storageKey = draftKey(kind, mode, initialData?.slug);
+  const storageKey = draftKey(mode, initialData?.slug);
   const isDirty = JSON.stringify(snapshot) !== JSON.stringify(baseline);
 
   const {
@@ -187,7 +183,6 @@ export default function ContentForm({
     const compressed = await compressImage(file);
     const formData = new FormData();
     formData.append("file", compressed);
-    formData.append("kind", kind);
     formData.append("assetId", assetPrefix);
     const res = await fetch("/api/upload", { method: "POST", body: formData });
     if (!res.ok) {
@@ -270,13 +265,13 @@ export default function ContentForm({
       published_at: date || null,
       image_url: imageUrl || null,
       asset_prefix: assetPrefix,
-      ...(kind === "project"
-        ? { repo_url: repoUrl || null, live_url: liveUrl || null, stage }
-        : {}),
+      repo_url: repoUrl || null,
+      live_url: liveUrl || null,
+      stage,
     };
 
     const res = await fetch(
-      mode === "create" ? apiBase : `${apiBase}/${initialData!.slug}`,
+      mode === "create" ? "/api/projects" : `/api/projects/${initialData!.slug}`,
       {
         method: mode === "create" ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
@@ -297,7 +292,7 @@ export default function ContentForm({
 
     // Replace the edit/new entry: the slug may have changed on save, so going
     // back to the old edit URL would 404.
-    router.replace(listHref);
+    router.replace("/admin");
     router.refresh();
   }
 
@@ -376,48 +371,44 @@ export default function ContentForm({
         />
       </div>
 
-      {kind === "project" && (
-        <>
-          <div className="flex flex-col gap-1.5">
-            <span className="uppercase" style={adminTypography.label}>
-              Repo URL
-            </span>
-            <input
-              type="url"
-              value={repoUrl}
-              onChange={(event) => setRepoUrl(event.target.value)}
-              style={adminTypography.input}
-            />
-          </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="uppercase" style={adminTypography.label}>
+          Repo URL
+        </span>
+        <input
+          type="url"
+          value={repoUrl}
+          onChange={(event) => setRepoUrl(event.target.value)}
+          style={adminTypography.input}
+        />
+      </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="uppercase" style={adminTypography.label}>
-              Live URL
-            </span>
-            <input
-              type="url"
-              value={liveUrl}
-              onChange={(event) => setLiveUrl(event.target.value)}
-              style={adminTypography.input}
-            />
-          </div>
+      <div className="flex flex-col gap-1.5">
+        <span className="uppercase" style={adminTypography.label}>
+          Live URL
+        </span>
+        <input
+          type="url"
+          value={liveUrl}
+          onChange={(event) => setLiveUrl(event.target.value)}
+          style={adminTypography.input}
+        />
+      </div>
 
-          <div className="flex flex-col gap-1.5">
-            <span className="uppercase" style={adminTypography.label}>
-              Stage
-            </span>
-            <select
-              value={stage}
-              onChange={(event) => setStage(event.target.value as ContentStage)}
-              style={adminTypography.input}
-            >
-              <option value="in_progress">In progress</option>
-              <option value="completed">Completed</option>
-              <option value="archived">Archived</option>
-            </select>
-          </div>
-        </>
-      )}
+      <div className="flex flex-col gap-1.5">
+        <span className="uppercase" style={adminTypography.label}>
+          Stage
+        </span>
+        <select
+          value={stage}
+          onChange={(event) => setStage(event.target.value as ContentStage)}
+          style={adminTypography.input}
+        >
+          <option value="in_progress">In progress</option>
+          <option value="completed">Completed</option>
+          <option value="archived">Archived</option>
+        </select>
+      </div>
 
       <div className="flex flex-col gap-1.5">
         <span className="uppercase" style={adminTypography.label}>

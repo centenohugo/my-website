@@ -31,15 +31,10 @@ export type StoredDraft = {
 const VERSION = 2;
 
 /**
- * One slot per form identity: the new-post form, plus one per existing slug.
- * Editing a post and editing a project of the same slug are different slots.
+ * One slot per form identity: the new-project form, plus one per existing slug.
  */
-export function draftKey(
-  kind: "post" | "project",
-  mode: "create" | "edit",
-  slug?: string
-) {
-  return mode === "create" ? `draft:${kind}:new` : `draft:${kind}:${slug}`;
+export function draftKey(mode: "create" | "edit", slug?: string) {
+  return mode === "create" ? "draft:project:new" : `draft:project:${slug}`;
 }
 
 /** The snapshot a freshly-opened form starts from, used as the dirty baseline. */

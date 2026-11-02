@@ -13,7 +13,7 @@ const RAW_SITE_URL =
 
 export const SITE_URL = RAW_SITE_URL.replace(/\/+$/, '')
 
-/** Absolute URL for a site-relative path, e.g. absoluteUrl('/blog/foo'). */
+/** Absolute URL for a site-relative path, e.g. absoluteUrl('/projects/foo'). */
 export function absoluteUrl(path: string): string {
   return `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`
 }

@@ -33,7 +33,7 @@ export default async function EditProjectPage({
         Edit project
       </h1>
 
-      <ContentForm kind="project" mode="edit" initialData={project} />
+      <ContentForm mode="edit" initialData={project} />
     </main>
   );
 }

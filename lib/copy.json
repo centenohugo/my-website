@@ -4,7 +4,6 @@
     "description": "Personal website of Hugo Centeno Sanz"
   },
   "nav": {
-    "blog": "Blog",
     "projects": "Projects",
     "about": "About"
   },
@@ -12,11 +11,6 @@
     "backLink": "← Back",
     "draftBadge": "Draft",
     "notFoundHome": "← Home"
-  },
-  "blog": {
-    "pageTitle": "Blog",
-    "metaDescription": "Notes and write-ups by Hugo Centeno Sanz on engineering, side projects and things learned by building them.",
-    "loadingMore": "Loading more ·"
   },
   "about": {
     "name": "Hugo Centeno Sanz",

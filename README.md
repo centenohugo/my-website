@@ -18,16 +18,16 @@ with no JavaScript needed.
 
 - `/robots.txt` (`app/robots.ts`) — opts every crawler in, including the named
   AI agents, and excludes `/admin`, `/login`, `/api/` and `?share=` links.
-- `/sitemap.xml` (`app/sitemap.ts`) — static routes plus every published post
-  and project, regenerated hourly.
+- `/sitemap.xml` (`app/sitemap.ts`) — static routes plus every published project,
+  regenerated hourly.
 - `/llms.txt` (`app/llms.txt/route.ts`) — the [llmstxt.org](https://llmstxt.org)
   curated index: what the site is, then one line per page linking to its
   Markdown.
-- `/blog/<slug>.md` and `/projects/<slug>.md` — plain-Markdown mirrors of every
-  published entry, with YAML front matter. They are rewrites (`next.config.ts`)
-  onto `app/markdown/[kind]/[slug]/route.ts`, and each HTML page advertises its
+- `/projects/<slug>.md` — plain-Markdown mirrors of every published project,
+  with YAML front matter. They are rewrites (`next.config.ts`) onto
+  `app/markdown/projects/[slug]/route.ts`, and each HTML page advertises its
   mirror with `<link rel="alternate" type="text/markdown">`.
-- JSON-LD (`app/JsonLd.tsx`) on the home, about, post and project pages.
+- JSON-LD (`app/JsonLd.tsx`) on the home and project pages.
 
 `NEXT_PUBLIC_SITE_URL` drives every absolute URL in that list — see
 `lib/site.ts`.

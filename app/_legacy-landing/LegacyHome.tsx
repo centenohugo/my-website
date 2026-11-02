@@ -16,7 +16,6 @@ export const metadata: Metadata = {
 export default function Home() {
   const SECTIONS = [
     { label: t.nav.projects, href: "/projects" },
-    { label: t.nav.blog, href: "/blog" },
     { label: t.nav.about, href: "/about" },
   ];
 

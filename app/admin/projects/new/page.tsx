@@ -15,7 +15,7 @@ export default function NewProjectPage() {
         New project
       </h1>
 
-      <ContentForm kind="project" mode="create" />
+      <ContentForm mode="create" />
     </main>
   );
 }

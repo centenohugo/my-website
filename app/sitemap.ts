@@ -8,7 +8,7 @@ import { absoluteUrl } from '@/lib/site'
 // Until that changes, this file is what makes older entries discoverable.
 
 // Regenerate hourly. Without this the route is prerendered once at build time
-// and a post published afterwards never appears.
+// and a project published afterwards never appears.
 export const revalidate = 3600
 
 type Entry = {
@@ -20,12 +20,11 @@ type Entry = {
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = [
   { url: absoluteUrl('/'), changeFrequency: 'weekly', priority: 1 },
-  { url: absoluteUrl('/blog'), changeFrequency: 'weekly', priority: 0.8 },
 ]
 
-function toEntries(rows: Entry[], prefix: '/blog' | '/projects'): MetadataRoute.Sitemap {
+function toEntries(rows: Entry[]): MetadataRoute.Sitemap {
   return rows.map((row) => ({
-    url: absoluteUrl(`${prefix}/${row.slug}`),
+    url: absoluteUrl(`/projects/${row.slug}`),
     lastModified: row.updated_at ?? row.published_at ?? undefined,
     changeFrequency: 'monthly' as const,
     priority: 0.7,
@@ -37,22 +36,14 @@ function toEntries(rows: Entry[], prefix: '/blog' | '/projects'): MetadataRoute.
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   try {
-    const [posts, projects] = await Promise.all([
-      sql<Entry[]>`
-        select slug, published_at, updated_at, image_url
-        from posts
-        where status = 'published'
-        order by published_at desc
-      `,
-      sql<Entry[]>`
-        select slug, published_at, updated_at, image_url
-        from projects
-        where status = 'published'
-        order by published_at desc
-      `,
-    ])
+    const projects = await sql<Entry[]>`
+      select slug, published_at, updated_at, image_url
+      from projects
+      where status = 'published'
+      order by published_at desc
+    `
 
-    return [...STATIC_ROUTES, ...toEntries(posts, '/blog'), ...toEntries(projects, '/projects')]
+    return [...STATIC_ROUTES, ...toEntries(projects)]
   } catch {
     // A database hiccup during a revalidate shouldn't serve a broken sitemap or
     // fail the build; the static routes are always correct.

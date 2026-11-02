@@ -16,7 +16,12 @@ export type ProjectDetail = {
   status: 'draft' | 'published'
 }
 
-/** See the note in ../../blog/[slug]/getPost.ts — same request-scoped dedupe. */
+/**
+ * `generateMetadata` and the page component both need the project, and both run
+ * on the same request. React's `cache` dedupes them to a single round-trip —
+ * the visibility arguments are part of the key, and both callers derive them
+ * the same way, so they hit.
+ */
 export const getProject = cache(async function getProject(
   slug: string,
   isAdmin: boolean,
